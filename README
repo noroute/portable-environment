@@ -1,0 +1,3 @@
+This is a set of configuration files (GNU screen, zsh and emacs) to have a
+consistent environment among machines I'm working on. Cherry-pick what you can
+re-use (especially the Emacs part (some parts need Emacs 23))
