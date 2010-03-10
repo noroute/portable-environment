@@ -1,0 +1,155 @@
+export WORDCHARS=''            
+umask 022
+bindkey "\C-w" kill-region
+
+##
+## Variables
+##
+
+export RSYNC_RSH=ssh
+export VISUAL=vim
+export EDITOR=$VISUAL
+export PAGER=less
+export ZSHRC="$HOME/.zshrc"
+export CLICOLOR="True"
+export PATH="$PATH:$HOME/bin"
+export BIBINPUTS="~/bib"
+
+##
+## history related stuff.
+##
+export HISTSIZE=50000
+export SAVEHIST=50000
+export HISTFILE=~/.zsh_history
+setopt hist_ignore_dups        # ignore same commands run twice+
+setopt appendhistory           # don't overwrite history 
+
+##
+## Options
+##
+unhash -am '*'
+typeset -U path
+typeset -U cdpath
+cdpath=(. $cdpath)
+
+zmodload -i zsh/complist 
+
+setopt nobeep                  # i hate beeps
+setopt noautomenu              # don't cycle completions
+#setopt autocd                  # change to dirs without cd
+setopt autopushd               # automatically append dirs to the push/pop list
+setopt pushdignoredups         # and don't duplicate them
+setopt cdablevars              # avoid the need for an explicit $
+#setopt nocheckjobs             # don't warn me about bg processes when exiting
+setopt nohup                   # and don't kill them, either
+setopt listpacked              # compact completion lists
+setopt nolisttypes             # show types in completion
+#setopt dvorak                  # with spelling correction, assume dvorak kb
+setopt extendedglob            # weird & wacky pattern matching - yay zsh!
+setopt completeinword          # not just at the end
+setopt alwaystoend             # when complete from middle, move cursor
+#setopt correct                 # spelling correction
+setopt nopromptcr              # don't add \n which overwrites cmds with no \n
+setopt histverify              # when using ! cmds, confirm first
+setopt interactivecomments     # escape commands so i can use them later
+#setopt printexitvalue          # alert me if something's failed
+
+##
+## Aliases
+##
+
+# nifty!
+alias -g L='| less'
+alias -g G='| grep'
+alias -g W='| wc -l'
+alias -g S='| sort'
+alias mmv='noglob zmv -W'
+autoload -U zmv
+
+# prevent globbing/correction
+alias mv='nocorrect mv -i'
+alias cp='nocorrect cp -i'
+alias rm='nocorrect rm -i'
+alias mkdir='nocorrect mkdir'
+alias man='nocorrect man'
+alias find='noglob find'
+
+# file extension aliases
+alias -s zip="zipinfo"
+alias -s txt "less"
+alias ll="ls -l"
+alias j="jobs -l"
+
+# svn
+alias co_root='svn co --depth immediates'
+alias up_root='svn up --set-depth immediates'
+alias up_tree='svn up --set-depth infinity'
+
+# quick edit
+alias z="$EDITOR ~/.zshrc; zsh-reload"
+alias e="emacsclient"
+
+##
+## Prompt (with hacks for screen!)
+##
+
+# if running screen, show window #
+if [ x$WINDOW != x ]; then
+    export PS1="%B%n@%m[$WINDOW] %~: %b"
+else
+    export PS1="%B%n@%m %~: %b"
+fi
+
+# preexec hook shows command in title as it's running, and precmd sets it to
+# something else when it's done. this should work with screen and
+# gnome-terminal2/multi-gnome-terminal
+
+case $TERM in
+    xterm*|screen*)
+        preexec () {
+            export CURRENTCMD="$1"
+            if [ x$WINDOW != x ]; then
+                print -Pn "\ek$1\e\\"
+            else
+                print -Pn "\e]0;$1\a"
+            fi
+        }
+        precmd () {
+            if [[ ! -z $CURRENTCMD ]]; then
+                if [ x$WINDOW != x ]; then
+                    print -Pn "\ek($CURRENTCMD)\e\\"
+                else
+                    print -Pn "\e]0;($CURRENTCMD)\a"
+                fi
+            fi
+        }
+    ;;
+esac
+
+##
+## completion tweaking
+##
+
+# complete hostnames out of ssh's ~/.ssh/known_hosts
+    autoload -U compinit; compinit
+    zstyle ':completion:*' use-cache on
+    zstyle ':completion:*' users resolve
+    if [ -d $HOME/.ssh/known_hosts ]; then
+	hosts=(${${${${(f)"$(<$HOME/.ssh/known_hosts)"}:#[0-9]*}%%\ *}%%,*})
+	zstyle ':completion:*:hosts' hosts $hosts
+    fi
+
+# use dircolours in completion listings
+    zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+# completion options
+    zstyle ':completion:*' menu select=15 #show menu if >=15 possibilities 
+    zstyle ':completion:*' completer _complete _match _approximate
+    zstyle ':completion:*:match:*' original only
+    zstyle ':completion:*:approximate:*' max-errors 1 numeric
+    zstyle ':completion:*' auto-description 'Specify: %d'
+    zstyle ':completion:*' format 'Completing %d'
+    zstyle ':completion:*' verbose true
+    zstyle ':completion:*:functions' ignored-patterns '_*'
+    zstyle ':completion:*:*:(^rm):*:*files' ignored-patterns \
+        '*?.(o|c~|zwc)' '*?~'

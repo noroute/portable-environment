@@ -1,0 +1,25 @@
+vbell on
+autodetach on
+startup_message off
+
+# emulate .logout message
+pow_detach_msg "Screen session of \$LOGNAME \$:cr:\$:nl:ended."
+
+defscrollback 1000
+
+#  give funky messages
+nethack on
+shell zsh
+# always display caption
+caption splitonly
+utf8 on
+
+# create new windows for stuff
+bind M screen -t Mail mutt
+bind C screen -t IRC irssi
+bind N screen -t News tin
+
+#default regions
+screen -t shell1 1
+screen -t shell2 2
+select 1

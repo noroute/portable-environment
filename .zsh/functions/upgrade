@@ -1,0 +1,21 @@
+function debian_upgrade()
+{
+    echo "Upgrading Debian"
+    sudo apt-get update && sudo apt-get -u upgrade
+    echo "Cleaning up"
+    sudo apt-get clean
+}
+
+function dports_upgrade()
+{
+    echo "Syncing ports"
+    sudo port sync
+    echo "Upgrading active ports"
+    sudo port -c upgrade active
+}
+
+dports_clean()
+{
+    echo "Cleaning up DarwinPorts"
+    sudo port clean --all installed
+}
