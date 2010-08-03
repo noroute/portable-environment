@@ -22,6 +22,11 @@
 (when onamacp
   (load "~/.emacs.d/el/magit/magit.el")
   (require 'magit))
+
+
+(when onamacp
+    (load "~/.emacs.d/el/markdown-mode/markdown-mode.el")
+    (require 'markdown-mode))
 ;(add-to-list 'load-path "~/.emacs.d/el/ecb-2.40")
 ;(require 'ecb)
 
