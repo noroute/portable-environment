@@ -11,7 +11,14 @@
 ; check if we're running on linux or mac
 
 (defvar linuxp (string-match "linux" (symbol-name system-type)))
-(defvar darwinp (string-match "darwin" (symbol-name system-type)))
+(defvar onamacp (string-match "darwin" (symbol-name system-type)))
+
+; add Darwinports path on Mac 
+(when onamacp
+  (setenv "PATH" (concat (getenv "PATH") ":" "/opt/local/bin"))
+  (add-to-list 'exec-path "/opt/local/bin"))
+
+
 
 (defvar my-dotemacs "~/.emacs")
 (defvar my-emacs-dir "~/.emacs.d/")

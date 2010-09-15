@@ -50,3 +50,11 @@
 (require 'yasnippet)
 (yas/initialize)
 (yas/load-directory "~/.emacs.d/el/yasnippet-0.6.1c/snippets")
+
+; Git
+(when onmacp
+  (add-to-list 'load-path "/opt/local/share/doc/git-core/contrib/emacs"))
+(require 'git)
+(require 'git-blame)
+; let vc- handle Git
+(add-to-list 'vc-handled-backends 'Git)
