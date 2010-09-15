@@ -18,7 +18,12 @@
   (setenv "PATH" (concat (getenv "PATH") ":" "/opt/local/bin"))
   (add-to-list 'exec-path "/opt/local/bin"))
 
-
+; testing magit
+(when onamacp
+  (load "~/.emacs.d/el/magit/magit.el")
+  (require 'magit))
+;(add-to-list 'load-path "~/.emacs.d/el/ecb-2.40")
+;(require 'ecb)
 
 (defvar my-dotemacs "~/.emacs")
 (defvar my-emacs-dir "~/.emacs.d/")
