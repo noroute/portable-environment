@@ -1,7 +1,4 @@
-(add-to-list 'load-path
-             "~/.emacs.d/el/ess-5.7.1/lisp")
-(require 'ess-site)
-(setq inferior-R-program-name "/opt/local/bin/R")
+(require 'tex-site)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; org-mode
@@ -44,7 +41,6 @@
 
 (autoload 'erc "erc" "Emacs Relay Chat" t)
 (autoload 'erc-spelling "erc-spelling" "ERC Spellchecker" t)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; yasnippets
