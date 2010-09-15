@@ -1,0 +1,15 @@
+# ssh-add -- wrap ssh-add to default to adding all identities in ${HOME}/.ssh
+function ssh-add()
+{
+    local files
+    if [[ $# -eq 0 ]] ; then
+	for i in $HOME/.ssh/*.key ; do
+	    if [[ -f $HOME/.ssh/$i ]] ; then
+		files=($files $HOME/.ssh/$i)
+	    fi
+	done
+    else
+	files=("$@")
+    fi
+    command ssh-add $files
+}
