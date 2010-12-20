@@ -7,14 +7,14 @@
 (when window-system
   (setq frame-title-format '(buffer-file-name "%f" ("%b")))
   (tooltip-mode -1)
-  (set-cursor-color 'darkgrey)
+  ;(set-cursor-color 'darkgrey)
   (blink-cursor-mode -1))
 
-;;; (when boundp 'darwin
-;;;       (setq mac-pass-command-to-system t))
-
+(defun set-german-input-method nil
+  (set-input-method 'german-postfix))
  
 (add-hook 'before-make-frame-hook 'turn-off-tool-bar)
+(add-hook 'text-mode-hook 'set-german-input-method)
  
 ;(mouse-wheel-mode t)
 ;(set-terminal-coding-system 'utf-8)
@@ -123,6 +123,6 @@
       version-control t)       ; use versioned backups
 
 ;; initial layout
-(setq default-frame-alist '((width . 85)
-			    (height . 60)))
+(setq default-frame-alist '((width . 100)
+			    (height . 80)))
 (setq initial-frame-alist default-frame-alist)

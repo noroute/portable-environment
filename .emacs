@@ -18,18 +18,6 @@
   (setenv "PATH" (concat (getenv "PATH") ":" "/opt/local/bin"))
   (add-to-list 'exec-path "/opt/local/bin"))
 
-; testing magit
-(when onamacp
-  (load "~/.emacs.d/el/magit/magit.el")
-  (require 'magit))
-
-
-(when onamacp
-    (load "~/.emacs.d/el/markdown-mode/markdown-mode.el")
-    (require 'markdown-mode))
-;(add-to-list 'load-path "~/.emacs.d/el/ecb-2.40")
-;(require 'ecb)
-
 (defvar my-dotemacs "~/.emacs")
 (defvar my-emacs-dir "~/.emacs.d/")
 (defvar my-config-dir "~/.emacs.d/conf")
@@ -48,8 +36,8 @@
   (if window-system
       (progn (set-frame-height (make-frame) 25)
 	     (tool-bar-mode 0)
-	     (auto-fill-mode))))
-             ;(raise-frame))))
+	     (auto-fill-mode)
+             (raise-frame))))
 (add-hook 'server-visit-hook '(lambda() (emacsclient-onStart)))
 
 ;; this hook is run when emacsclient is closed (ie. buffer is closed)

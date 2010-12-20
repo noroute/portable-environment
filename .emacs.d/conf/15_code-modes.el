@@ -15,15 +15,16 @@
 ;                   'nxml-mode))
 
 ; ESS
-(add-to-list 'load-path
-             "~/.emacs.d/el/ess-5.10/lisp")
-(require 'ess-site)
+(autoload 'ess-site "ess-site" "Emacs speaks statistics" t)
 (setq inferior-R-program-name "/opt/local/bin/R")
 
 ; misc
-(load "python-mode.el")
-;(load "ecb")
-
-(setq auto-mode-alist
-  (cons '("\\.php\\w?" . php-mode) auto-mode-alist))
+(autoload 'python-mode "python-mode" "Python!" t)
+(autoload 'ecb "ecb-activate" "Emacs IDE" t)
 (autoload 'php-mode "php-mode" "PHP mode." t)
+(autoload 'ruby-mode "ruby-mode" "Ruby" t)
+
+(add-to-list 'auto-mode-alist '("\\.php\\w?" . php-mode))
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.py$" . python-mode))
+(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
