@@ -14,20 +14,22 @@
 
 (setq org-todo-keywords (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
  (sequence "WAITING(w@/!)" "SOMEDAY(s!)" "|" "CANCELLED(c@/!)")
- (sequence "FEEDBACK(f)" "EXPIRED(E@)" "REJECTED(R@)")
+ (sequence "FEEDBACK(f)" "EXPIRED(E@)" "REJECTED(R@)" "DELEGATED(D)")
  (sequence "OPEN(O)" "|" "CLOSED(C)"))))
 
-(setq org-todo-keyword-faces (quote (("TODO" :foreground "red" :weight bold)
- ("NEXT" :foreground "blue" :weight bold)
- ("DONE" :foreground "forest green" :weight bold)
- ("WAITING" :foreground "yellow" :weight bold)
- ("SOMEDAY" :foreground "goldenrod" :weight bold)
- ("CANCELLED" :foreground "orangered" :weight bold)
- ("FEEDBACK" :foreground "magenta" :weight bold)
- ("EXPIRED" :foreground "olivedrab1" :weight bold)
- ("REJECTED" :foreground "olivedrab" :weight bold)
- ("OPEN" :foreground "magenta" :weight bold)
- ("CLOSED" :foreground "forest green" :weight bold))))
+(setq org-todo-keyword-faces (quote
+ (("TODO" :foreground "red" :weight bold)
+  ("NEXT" :foreground "blue" :weight bold)
+  ("DONE" :foreground "forest green" :weight bold)
+  ("WAITING" :foreground "yellow" :weight bold)
+  ("SOMEDAY" :foreground "goldenrod" :weight bold)
+  ("CANCELLED" :foreground "orangered" :weight bold)
+  ("FEEDBACK" :foreground "magenta" :weight bold)
+  ("EXPIRED" :foreground "olivedrab1" :weight bold)
+  ("REJECTED" :foreground "olivedrab" :weight bold)
+  ("OPEN" :foreground "magenta" :weight bold)
+  ("CLOSED" :foreground "forest green" :weight bold)
+  ("DELEGATED" :forground "yellow" :weight bold))))
 
 ;; auto-tag by state, makes for easy filtering, YAY!
 (setq org-todo-state-tags-triggers
@@ -98,7 +100,7 @@
 (add-hook 'diary-display-hook 'fancy-diary-display)
 (add-hook 'today-visible-calendar-hook 'calendar-mark-today)
 
-;; Clocking ;;
+;;;;;;;;;; Clocking ;;;;;;;;;;
 
 (defun bh/clock-in-to-next (kw)
   "Switch task from TODO to NEXT when clocking in.
@@ -230,10 +232,33 @@ Skips capture tasks and tasks with subtasks"
 
 (setq org-clock-out-remove-zero-time-clocks t)
 
+;;;;;;;;;; Effort ;;;;;;;;;;
+
 ;; Agenda log mode items to display (clock time only by default)
 (setq org-agenda-log-mode-items (quote (clock)))
+; global Effort estimate values
+(setq org-global-properties (quote (("Effort_ALL" . "0:10 0:30 1:00 2:00 3:00 4:00 5:00 6:00 7:00 8:00"))))
 
-;; Tags ;;
+;;;;;;;;;; Highlighting ;;;;;;;;;;
+
+;; Always hilight the current agenda line
+(add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
+
+;; The following custom-set-faces create the highlights
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(highlight ((t (:background "cyan"))))
+ '(hl-line ((t (:inherit highlight :background "darkseagreen2")))))
+
+; Set default column view headings: Task Effort Clock_Summary
+(setq org-columns-default-format "%80ITEM(Task) %10Effort(Effort){:} %10CLOCKSUM")
+
+(setq org-startup-indented t)
+
+;;;;;;;;;; Tags ;;;;;;;;;;
 
 ; Tags with fast selection keys
 (setq org-tag-alist (quote ((:startgroup)
@@ -255,7 +280,8 @@ Skips capture tasks and tasks with subtasks"
 ; For tag searches ignore tasks with scheduled and deadline dates
 (setq org-agenda-tags-todo-honor-ignore-options t)
 
-;; Agenda view
+
+;;;;;;;;;; Agenda view ;;;;;;;;;;
 
 ;; Keep tasks with dates off the global todo lists
 (setq org-agenda-todo-ignore-with-date nil)
@@ -274,6 +300,8 @@ Skips capture tasks and tasks with subtasks"
 
 ;; Remove completed items from search results
 (setq org-agenda-skip-timestamp-if-done t)
+
+;;;;;;;;;; Git ;;;;;;;;;;
 
 ; git-sync runs on the hour, so save before
 (run-at-time "00:59" 3600 'org-save-all-org-buffers)
