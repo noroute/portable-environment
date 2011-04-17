@@ -1,3 +1,4 @@
+shell zsh
 vbell on
 autodetach on
 startup_message off
@@ -6,13 +7,15 @@ startup_message off
 pow_detach_msg "Screen session of \$LOGNAME \$:cr:\$:nl:ended."
 
 defscrollback 1000
+history 100000
+
+hardstatus on
+hardstatus alwayslastline
+hardstatus string "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %D %y/%m/%d %c "
 
 #  give funky messages
 nethack on
-shell zsh
-# always display caption
-caption splitonly
-utf8 on
+defutf8 on
 
 # create new windows for stuff
 bind M screen -t Mail mutt
@@ -20,6 +23,8 @@ bind C screen -t IRC irssi
 bind N screen -t News tin
 
 #default regions
-screen -t shell1 1
-screen -t shell2 2
-select 1
+screen -t compile 2
+screen -t git 3
+screen -t local 4
+screen -t centerim 9 centerim -a
+select 4

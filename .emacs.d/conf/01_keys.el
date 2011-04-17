@@ -66,8 +66,7 @@
 (global-set-key (kbd "C-<f10>") 'next-buffer)
 
 ; org-mode
-
-(global-set-key (kbd "<f11>") 'org-clock-goto)
+(global-set-key (kbd "<f8>") 'org-clock-goto)
 (global-set-key (kbd "C-<f11>") 'org-clock-in)
 (global-set-key (kbd "C-s-<f12>") 'bh/save-then-publish)
 (global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
@@ -80,9 +79,9 @@
 
 (global-set-key (kbd "<f9> I") 'bh/clock-in)
 (global-set-key (kbd "<f9> O") 'bh/clock-out)
-(global-set-key (kbd "<f9> r") 'boxquote-region)
+;(global-set-key (kbd "<f9> r") 'boxquote-region)
 (global-set-key (kbd "<f9> s") 'bh/go-to-scratch)
-(global-set-key (kbd "<f9> t") 'bh/insert-inactive-timestamp)
+;(global-set-key (kbd "<f9> t") 'bh/insert-inactive-timestamp)
 (global-set-key (kbd "<f9> u") 'bh/untabify)
 (global-set-key (kbd "<f9> i") 'bh/org-info)
 (global-set-key (kbd "<f9> v") 'visible-mode)
@@ -108,3 +107,14 @@
 (defun bh/untabify ()
   (interactive)
   (untabify (point-min) (point-max)))
+
+; fullscreen!
+(defun toggle-fullscreen (&optional f)
+      (interactive)
+      (let ((current-value (frame-parameter nil 'fullscreen)))
+           (set-frame-parameter nil 'fullscreen
+                                (if (equal 'fullboth current-value)
+                                    (if (boundp 'old-fullscreen) old-fullscreen nil)
+                                    (progn (setq old-fullscreen current-value)
+                                           'fullboth)))))
+    (global-set-key [f11] 'toggle-fullscreen)
