@@ -74,8 +74,7 @@
 
 (setq org-remember-templates (quote (("todo" ?t "* TODO %?\n %U\n %a" nil bottom nil)
                                      ("note" ?n "* %?                                     :NOTE:\n %U\n %a\n :CLOCK:\n  :END:" nil bottom nil)
-                                      ("appointment" ?a "* %?\n %U" (concat org-directory "todo.org") "Appointments" nil)
-                                      ("org-protocol" ?w "* TODO Review %c%!\n %U" nil bottom nil))))
+("journal" ?j "* %?\n %T\n %a" nil bottom nil))))
 
 ;; refiling setup
 ; Use IDO for target completion
