@@ -21,8 +21,12 @@ export BIBINPUTS="~/bib"
 export HISTSIZE=50000
 export SAVEHIST=50000
 export HISTFILE=~/.zsh_history
-setopt hist_ignore_dups        # ignore same commands run twice+
-setopt appendhistory           # don't overwrite history 
+setopt HIST_IGNORE_DUPS        # ignore same commands run twice
+setopt INC_APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt APPEND_HISTORY
+setopt EXTENDED_HISTORY # save time an duration, too
+
 
 ##
 ## Options
@@ -44,7 +48,6 @@ setopt cdablevars              # avoid the need for an explicit $
 setopt nohup                   # and don't kill them, either
 setopt listpacked              # compact completion lists
 setopt nolisttypes             # show types in completion
-#setopt dvorak                  # with spelling correction, assume dvorak kb
 setopt extendedglob            # weird & wacky pattern matching - yay zsh!
 setopt completeinword          # not just at the end
 setopt alwaystoend             # when complete from middle, move cursor
@@ -52,7 +55,7 @@ setopt alwaystoend             # when complete from middle, move cursor
 setopt nopromptcr              # don't add \n which overwrites cmds with no \n
 setopt histverify              # when using ! cmds, confirm first
 setopt interactivecomments     # escape commands so i can use them later
-#setopt printexitvalue          # alert me if something's failed
+setopt printexitvalue          # alert me if something's failed
 
 ##
 ## Aliases
@@ -99,6 +102,8 @@ if [ x$WINDOW != x ]; then
 else
     export PS1="%B%n@%m %~: %b"
 fi
+
+RPROMPT='[%* on %D]' # prompt for right side of screen
 
 # preexec hook shows command in title as it's running, and precmd sets it to
 # something else when it's done. this should work with screen and
