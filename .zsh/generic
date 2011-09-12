@@ -23,7 +23,7 @@ export SAVEHIST=50000
 export HISTFILE=~/.zsh_history
 setopt HIST_IGNORE_DUPS        # ignore same commands run twice
 setopt INC_APPEND_HISTORY
-setopt SHARE_HISTORY
+#setopt SHARE_HISTORY
 setopt APPEND_HISTORY
 setopt EXTENDED_HISTORY # save time an duration, too
 
@@ -91,6 +91,12 @@ alias up_tree='svn up --set-depth infinity'
 # quick edit
 alias z="$EDITOR ~/.zshrc; zsh-reload"
 alias e="emacsclient"
+
+# git
+alias gsup="git svn fetch && git svn rebase"
+alias gsd="git svn dcommit"
+alias grevert="git reset --hard HEAD"
+alias gl="git log --oneline"
 
 ##
 ## Prompt (with hacks for screen!)
