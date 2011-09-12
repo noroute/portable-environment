@@ -13,9 +13,10 @@
 (setq org-agenda-include-diary t)
 
 (setq org-todo-keywords (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
- (sequence "WAITING(w@/!)" "SOMEDAY(s!)" "|" "CANCELLED(c@/!)")
- (sequence "FEEDBACK(f)" "EXPIRED(E@)" "REJECTED(R@)" "DELEGATED(D)")
- (sequence "OPEN(O)" "|" "CLOSED(C)"))))
+                                (sequence "BACKLOG(b)" "READY(r)" "INPROGRESS(i)" "TEST(T)")
+                                (sequence "WAITING(w@/!)" "SOMEDAY(s!)" "|" "CANCELLED(c@/!)")
+                                (sequence "FEEDBACK(f)" "EXPIRED(E@)" "REJECTED(R@)" "DELEGATED(D)")
+                                (sequence "OPEN(O)" "|" "CLOSED(C)"))))
 
 (setq org-todo-keyword-faces (quote
  (("TODO" :foreground "red" :weight bold)
@@ -39,16 +40,36 @@
                ("WAITING" . t))
               ("SOMEDAY"
                ("WAITING" . t))
-              (done
+              ("BACKLOG"
+                ("BACKLOG" . t)
+                ("INPROGRESS")
+                ("READY")
+                ("TEST"))
+              ("READY"
+               ("READY" .t)
+               ("BACKLOG")
+               ("INPROGRESS")
+               ("TEST")
                ("WAITING"))
+              ("INPROGRESS"
+               ("INPROGRESS" .t)
+               ("WAITING")
+               ("CANCELLED")
+               ("BACKLOG")
+               ("READY"))
+              ("TEST"
+               ("TEST" .t)
+               ("INPROGRESS")
+               ("BACKLOG"))
               ("TODO"
                ("WAITING")
                ("CANCELLED"))
-              ("NEXT"
-               ("WAITING"))
               ("DONE"
                ("WAITING")
-               ("CANCELLED")))))
+               ("CANCELLED"))
+              (done
+               ("WAITING")))))
+
 
 ;; Org
 (define-key global-map "\C-cl" 'org-store-link)
@@ -72,7 +93,7 @@
 (global-set-key (kbd "C-M-r") 'org-remember)
 (setq org-remember-store-without-prompt t)
 
-(setq org-remember-templates (quote (("todo" ?t "* TODO %?\n %U\n %a" nil bottom nil)
+(setq org-remember-templates (quote (("backlog" ?b "* BACKLOG %? :REFILE:BACKLOG: \n %U\n %a\n" nil bottom nil)
                                      ("note" ?n "* %?                                     :NOTE:\n %U\n %a\n :CLOCK:\n  :END:" nil bottom nil)
 ("journal" ?j "* %?\n %T\n %a" nil bottom nil))))
 
@@ -93,9 +114,9 @@
 (setq org-refile-allow-creating-parent-nodes (quote confirm))
 
 ;; diary
-(setq view-diary-entries-initially t
-      mark-diary-entries-in-calendar t
-      number-of-diary-entries 7)
+(setq calendar-view-diary-initially-flag t
+      calendar-mark-diary-entries-flag t
+      diary-number-of-entries 7)
 (add-hook 'diary-display-hook 'fancy-diary-display)
 (add-hook 'today-visible-calendar-hook 'calendar-mark-today)
 
@@ -144,8 +165,6 @@ Skips capture tasks and tasks with subtasks"
                 (org-agenda-overriding-header "Tasks to Refile")))
               ("N" "Notes" tags "NOTE"
                ((org-agenda-overriding-header "Notes")))
-              ("n" "Next" tags-todo "-WAITING-CANCELLED/!NEXT"
-               ((org-agenda-overriding-header "Next Tasks")))
               ("p" "Projects" tags-todo "LEVEL=2-REFILE|LEVEL=1+REFILE/!-DONE-CANCELLED"
                ((org-agenda-skip-function 'bh/skip-non-projects)
                 (org-agenda-overriding-header "Projects")))
@@ -165,7 +184,16 @@ Skips capture tasks and tasks with subtasks"
               ("c" "Select default clocking task" tags "LEVEL=2-REFILE"
                ((org-agenda-skip-function
                  '(org-agenda-skip-subtree-if 'notregexp "^\\*\\* Organization"))
-                (org-agenda-overriding-header "Set default clocking task with C-u C-u I"))))))
+                (org-agenda-overriding-header "Set default clocking task with C-u C-u I")))
+              ("b" "Backlog items, not process related" tags "BACKLOG-PROCESS-CANCELLED"
+               ((org-agenda-overriding-header "Non-process backlog")))
+              ("B" "Backlog items" tags "BACKLOG-CANCELLED"
+               ((org-agenda-overriding-header "All backlog items")))
+              ("R" "Ready items" tags "READY"
+               ((org-agenda-overriding-header "Ready!")))
+              ("I" "Items in progress (worked on and to test)" tags "INPROGRESS-CANCELLED|TEST-CANCELLED"
+               ((org-agenda-overriding-header "Items in progress (worked on and to test)"))))))
+
 
 ;;
 ;; Resume clocking tasks when emacs is restarted
