@@ -33,6 +33,7 @@
 
 (global-set-key (kbd "C-+") 'font-inc-size)
 (global-set-key (kbd "C--") 'font-dec-size)
+(global-set-key (kbd "<f11>") 'magit-status)
 
 ; views
 (global-set-key (kbd "<f2>") '(lambda () ( (interactive) (ansi-term "screen" "screen"))))
