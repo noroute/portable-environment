@@ -33,7 +33,7 @@
 
 (global-set-key (kbd "C-+") 'font-inc-size)
 (global-set-key (kbd "C--") 'font-dec-size)
-(global-set-key (kbd "<f11>") 'magit-status)
+(global-set-key (kbd "<f5>") 'magit-status)
 
 ; views
 (global-set-key (kbd "<f2>") '(lambda () ( (interactive) (ansi-term "screen" "screen"))))
@@ -42,8 +42,6 @@
 (global-set-key (kbd "<f9> f") 'boxquote-insert-file)
 (global-set-key (kbd "<f9> g") 'gnus)
 (global-set-key (kbd "<f12>") 'org-agenda)
-(global-set-key (kbd "<f5>") 'bh/org-todo)
-(global-set-key (kbd "<S-f5>") 'bh/widen)
 (global-set-key (kbd "<f7>") 'set-truncate-lines)
 (global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
 (global-set-key (kbd "<f9> h") 'bh/hide-other)
@@ -87,14 +85,6 @@
 (global-set-key (kbd "<f9> i") 'bh/org-info)
 (global-set-key (kbd "<f9> v") 'visible-mode)
 (global-set-key (kbd "<f9> SPC") 'bh/clock-in-last-task)
-
-(defun bh/hide-other ()
-  (interactive)
-  (save-excursion
-    (org-back-to-heading)
-    (org-shifttab)
-    (org-reveal)
-    (org-cycle)))
 
 (defun bh/org-info ()
   (interactive)
