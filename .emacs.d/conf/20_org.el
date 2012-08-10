@@ -68,7 +68,10 @@
                ("WAITING")
                ("CANCELLED"))
               (done
-               ("WAITING")))))
+               ("WAITING")
+               ("INPROGRESS")
+               ("TEST")
+               ("READY")))))
 
 
 ;; Org
@@ -153,7 +156,7 @@ Skips capture tasks and tasks with subtasks"
 ;; custom agenda commands
 (setq org-agenda-custom-commands
       (quote (("w" "Tasks waiting on something" tags "WAITING/!"
-               ((org-use-tag-inheritance nil)
+               ((org-tags-exclude-from-inheritance '("WAITING"))
                 (org-agenda-todo-ignore-scheduled nil)
                 (org-agenda-todo-ignore-deadlines nil)
                 (org-agenda-todo-ignore-with-date nil)
@@ -186,14 +189,17 @@ Skips capture tasks and tasks with subtasks"
                  '(org-agenda-skip-subtree-if 'notregexp "^\\*\\* Organization"))
                 (org-agenda-overriding-header "Set default clocking task with C-u C-u I")))
               ("b" "Backlog items, not process related" tags "BACKLOG-PROCESS-CANCELLED"
-               ((org-agenda-overriding-header "Non-process backlog")))
+               ((org-agenda-overriding-header "Non-process backlog")
+                (org-tags-exclude-from-inheritance '("BACKLOG"))))
               ("B" "Backlog items" tags "BACKLOG-CANCELLED"
-               ((org-agenda-overriding-header "All backlog items")))
+               ((org-agenda-overriding-header "All backlog items")
+                (org-tags-exclude-from-inheritance '("BACKLOG"))))
               ("R" "Ready items" tags "READY"
-               ((org-agenda-overriding-header "Ready!")))
+               ((org-agenda-overriding-header "Ready!")
+                (org-tags-exclude-from-inheritance '("READY"))))
               ("I" "Items in progress (worked on and to test)" tags "INPROGRESS-CANCELLED|TEST-CANCELLED"
-               ((org-agenda-overriding-header "Items in progress (worked on and to test)"))))))
-
+               ((org-agenda-overriding-header "Items in progress (worked on and to test)")
+                (org-tags-exclude-from-inheritance '("INPROGRESS" "TEST")))))))
 
 ;;
 ;; Resume clocking tasks when emacs is restarted
