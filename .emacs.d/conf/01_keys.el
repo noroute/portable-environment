@@ -91,13 +91,8 @@
 (global-set-key (kbd "<f9> s") 'bh/go-to-scratch)
 ;(global-set-key (kbd "<f9> t") 'bh/insert-inactive-timestamp)
 (global-set-key (kbd "<f9> u") 'bh/untabify)
-(global-set-key (kbd "<f9> i") 'bh/org-info)
 (global-set-key (kbd "<f9> v") 'visible-mode)
 (global-set-key (kbd "<f9> SPC") 'bh/clock-in-last-task)
-
-(defun bh/org-info ()
-  (interactive)
-  (info "~/git/org-mode/doc/org.info"))
 
 (defun bh/go-to-scratch ()
   (interactive)
