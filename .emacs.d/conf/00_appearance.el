@@ -17,9 +17,9 @@
 (add-hook 'text-mode-hook 'set-german-input-method)
  
 ;(mouse-wheel-mode t)
-;(set-terminal-coding-system 'utf-8)
-;(set-keyboard-coding-system 'utf-8)
-;(prefer-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
  
 (setq visible-bell t
       echo-keystrokes 0.1
@@ -56,14 +56,13 @@
 (desktop-save-mode 1)
  
 ;; ido-mode is like magic pixie dust!
-(when (> emacs-major-version 21)
-  (ido-mode t)
-  (setq ido-enable-prefix nil
-        ido-enable-flex-matching t
-        ido-create-new-buffer 'always
-        ido-use-fiename-at-point 'guess
-        ido-max-prospects 10))
- 
+(ido-mode t)
+(setq ido-enable-prefix nil
+      ido-enable-flex-matching t
+      ido-create-new-buffer 'always
+      ido-use-fiename-at-point 'guess
+      ido-max-prospects 10)
+
 (set-default 'indent-tabs-mode nil)
 (set-default 'indicate-empty-lines t)
 (set-default 'imenu-auto-rescan t)
@@ -124,5 +123,5 @@
 
 ;; initial layout
 (setq default-frame-alist '((width . 100)
-			    (height . 80)))
+			    (height . 60)))
 (setq initial-frame-alist default-frame-alist)
