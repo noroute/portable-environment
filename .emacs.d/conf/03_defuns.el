@@ -62,61 +62,7 @@ Symbols matching the text at point are put first in the completion list."
     (let* ((selected-symbol (ido-completing-read "Symbol? " symbol-names))
            (position (cdr (assoc selected-symbol name-and-pos))))
       (goto-char position))))
- 
-;;; These belong in coding-hook:
- 
-;; We have a number of turn-on-* functions since it's advised that lambda
-;; functions not go in hooks. Repeatedly evaling an add-to-list with a
-;; hook value will repeatedly add it since there's no way to ensure
-;; that a lambda doesn't already exist in the list.
- 
-(defun local-column-number-mode ()
-  (make-local-variable 'column-number-mode)
-  (column-number-mode t))
- 
-(defun local-comment-auto-fill ()
-  (set (make-local-variable 'comment-auto-fill-only-comments) t)
-  (auto-fill-mode t))
- 
-(defun turn-on-hl-line-mode ()
-  (if window-system (hl-line-mode t)))
- 
-(defun turn-on-save-place-mode ()
-  (setq save-place t))
- 
-(defun turn-on-whitespace ()
-  (whitespace-mode t))
- 
-(defun turn-on-paredit ()
-  (paredit-mode t))
- 
-(defun turn-off-tool-bar ()
-  (tool-bar-mode -1))
- 
-(add-hook 'coding-hook 'local-column-number-mode)
-(add-hook 'coding-hook 'local-comment-auto-fill)
-(add-hook 'coding-hook 'turn-on-hl-line-mode)
-(add-hook 'coding-hook 'pretty-lambdas)
   
-(defun run-coding-hook ()
-  "Enable things that are convenient across all coding buffers."
-  (run-hooks 'coding-hook))
- 
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
- 
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
- 
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
- 
 (defun recentf-ido-find-file ()
   "Find a recent file using ido."
   (interactive)
@@ -124,14 +70,29 @@ Symbols matching the text at point are put first in the completion list."
     (when file
       (find-file file))))
  
-;; Cosmetic
- 
-(defun pretty-lambdas ()
-  (font-lock-add-keywords
-   nil `(("(?\\(lambda\\>\\)"
-          (0 (progn (compose-region (match-beginning 1) (match-end 1)
-                                    ,(make-char 'greek-iso8859-7 107))
-                    nil))))))
+;; grabbed from http://blog.tuxicity.se/elisp/emacs/2010/03/11/duplicate-current-line-or-region-in-emacs.html
+(defun duplicate-current-line-or-region (arg)
+  "Duplicates the current line or region ARG times.
+If there's no region, the current line will be duplicated. However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (let (beg end (origin (point)))
+    (if (and mark-active (> (point) (mark)))
+        (exchange-point-and-mark))
+    (setq beg (line-beginning-position))
+    (if mark-active
+        (exchange-point-and-mark))
+    (setq end (line-end-position))
+    (let ((region (buffer-substring-no-properties beg end)))
+      (dotimes (i arg)
+        (goto-char end)
+        (newline)
+        (insert region)
+        (setq end (point)))
+      (goto-char (+ origin (* (length region) arg) arg)))))
+
+;; map it to keybinding
+(global-set-key (kbd "C-c d") 'duplicate-current-line-or-region)
  
 ;; Other
  
@@ -195,11 +156,6 @@ Symbols matching the text at point are put first in the completion list."
   "Insert a time-stamp according to locale's date and time format."
   (interactive)
   (insert (format-time-string "%c" (current-time))))
- 
-(defun pairing-bot ()
-  "If you can't pair program with a human, use this instead."
-  (interactive)
-  (message (if (y-or-n-p "Do you have a test for that? ") "Good." "Bad!")))
  
 (defun esk-paredit-nonlisp ()
   "Turn on paredit mode for non-lisps."

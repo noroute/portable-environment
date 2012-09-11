@@ -1,14 +1,11 @@
+(require 'whitespace)
+
 ; Automatic encryption with EasyPG
 (require 'epa-file)
 (epa-file-enable)
 
 ;(require 'tex-site)
 ;(require 'magit)
-
-(add-to-list 'load-path "~/git/puppet-syntax-emacs")
-(autoload 'puppet-mode "puppet-mode.el")
-(setq auto-mode-alist
-   (cons '("\\.pp" . puppet-mode) auto-mode-alist))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; yasnippets
