@@ -274,9 +274,6 @@ Skips capture tasks and tasks with subtasks"
 
 ;;;;;;;;;; Highlighting ;;;;;;;;;;
 
-;; Always hilight the current agenda line
-(add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
-
 ;; The following custom-set-faces create the highlights
 (custom-set-faces
   ;; custom-set-faces was added by Custom.

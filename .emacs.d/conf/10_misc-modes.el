@@ -1,26 +1,7 @@
-; Provide more packages than available in GNU
-(require 'package)
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("marmalade" . "http://marmalade-repo.org/packages/")))
-(package-initialize)
-
-(require 'whitespace)
-
 ; Automatic encryption with EasyPG
 (require 'epa-file)
 (epa-file-enable)
 
-(require 'project-mode)
-(project-load-all)
-
-; override perl-mode
-(defalias 'perl-mode 'cperl-mode)
-
-(autoload 'cperl-mode "cperl-mode" t)
-(add-hook 'cperl-mode-hook
-	  '(lambda ()
-	    (define-key cperl-mode-map "\C-cf" 'cperl-perldoc-at-point)
-	    (define-key cperl-mode-map "\C-cF" 'cperl-perldoc)))
 (add-hook 'cperl-mode-hook 'run-coding-hook)
 
 ; ESS

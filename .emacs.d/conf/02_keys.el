@@ -15,21 +15,6 @@
 ; annoying ctrl-z!
 (global-set-key "\C-z" nil)
 
-(defun font-inc-size ()
-  (interactive)
-  (set-face-attribute 'default
-                      nil
-                      :height
-                      (ceiling (* 1.10
-                                  (face-attribute 'default :height)))))
-(defun font-dec-size ()
-  (interactive)
-  (set-face-attribute 'default
-                      nil
-                      :height
-                      (floor (* 0.9
-                                  (face-attribute 'default :height)))))
-
 (defun switch-to (buffername)
   (lambda ()
     (interactive)
@@ -40,38 +25,12 @@
     (interactive)
     (ansi-term "screen" "screen")))
 
-(global-set-key (kbd "C-+") 'font-inc-size)
-(global-set-key (kbd "C--") 'font-dec-size)
-(global-set-key (kbd "<f5>") 'magit-status)
-
 ; views
-(global-set-key (kbd "<f2>") '(lambda () ( (interactive) (ansi-term "screen" "screen"))))
-(global-set-key (kbd "<f9> b") 'bbdb)
-(global-set-key (kbd "<f9> c") 'calendar)
-(global-set-key (kbd "<f9> f") 'boxquote-insert-file)
-(global-set-key (kbd "<f9> g") 'gnus)
 (global-set-key (kbd "<f12>") 'org-agenda)
-(global-set-key (kbd "<f7>") 'set-truncate-lines)
 (global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
-(global-set-key (kbd "<f9> h") 'bh/hide-other)
 
 ;; Jump to a definition in the current file. (This is awesome.)
 (global-set-key (kbd "C-x C-i") 'ido-imenu)
-
-;; Completion that uses many different methods to find options.
-(global-set-key (kbd "M-/") 'hippie-expand)
-
-;; File finding
-(global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
-(global-set-key (kbd "C-x C-M-f") 'find-file-in-project)
-(global-set-key (kbd "C-x f") 'recentf-ido-find-file)
-(global-set-key (kbd "C-c y") 'bury-buffer)
-(global-set-key (kbd "C-c r") 'revert-buffer)
-(global-set-key (kbd "M-`") 'file-cache-minibuffer-complete)
-(global-set-key (kbd "C-x C-b") 'ibuffer)
-(global-set-key (kbd "C-<f9>") 'previous-buffer)
-(global-set-key (kbd "C-x n r") 'narrow-to-region)
-(global-set-key (kbd "C-<f10>") 'next-buffer)
 
 ; org-mode
 (global-set-key (kbd "<f8>") 'org-clock-goto)
