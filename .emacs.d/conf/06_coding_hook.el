@@ -13,9 +13,6 @@
   (set (make-local-variable 'comment-auto-fill-only-comments) t)
   (auto-fill-mode t))
 
-(defun turn-on-save-place-mode ()
-  (setq save-place t))
-
 (defun turn-on-whitespace ()
   (whitespace-mode t))
 
@@ -28,7 +25,6 @@
 (add-hook 'coding-hook 'local-column-number-mode)
 (add-hook 'coding-hook 'local-comment-auto-fill)
 (add-hook 'coding-hook 'pretty-lambdas)
-(add-hook 'coding-hook 'turn-on-save-place-mode)
 (add-hook 'coding-hook 'turn-on-whitespace)
 (add-hook 'coding-hook 'turn-on-paredit)
 
