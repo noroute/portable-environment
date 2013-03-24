@@ -77,7 +77,7 @@
 ;; Org
 (define-key global-map "\C-cl" 'org-store-link)
 (define-key global-map "\C-ca" 'org-agenda)
-(define-key global-map "\C-c \C-q" 'org-set-tags)
+(define-key global-map "\C-cq" 'org-set-tags)
 
 ; make org note the time for everytime I completed recurring tasks
 (setq org-log-repeat "time")
