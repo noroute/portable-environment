@@ -4,10 +4,6 @@
 
 (add-hook 'cperl-mode-hook 'run-coding-hook)
 
-; ESS
-(autoload 'ess-site "ess-site" "Emacs speaks statistics" t)
-(setq inferior-R-program-name "/opt/local/bin/R")
-
 ; misc
 (autoload 'python-mode "python-mode" "Python!" t)
 (add-hook 'python-mode-hook 'run-coding-hook)
