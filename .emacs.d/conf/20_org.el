@@ -3,8 +3,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'remember)
-(org-remember-insinuate)
 (require 'org)
+(org-remember-insinuate)
 
 (setq org-directory "~/org")
 (setq org-default-notes-file (concat org-directory "/refile.org"))
