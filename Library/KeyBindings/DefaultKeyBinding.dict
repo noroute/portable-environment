@@ -1,0 +1,16 @@
+/* emacsify Mac OS X, see http://youtrack.jetbrains.com/issue/IDEA-17392 */
+{
+ /* Kill alt-bindings that keep me from using emacs-style operations */
+  "~f" = "moveWordForward:";
+  "~b" = "moveWordBackward:";
+  "~d" = "deleteWordForward:";
+
+ /* add some missing emacs features */
+  "~<" = "moveToBeginningOfDocument:";
+  "~>" = "moveToEndOfDocument:";
+  "~v" = "pageUp:";
+  "^v" = "pageDown:";
+  "^/" = "undo:";
+  "~/" = "complete:"; /* escape */
+  "^j" = "insertNewline:"; /* Ctrl-j in case TextExtras isn't around */
+}
