@@ -11,6 +11,6 @@
   "~v" = "pageUp:";
   "^v" = "pageDown:";
   "^/" = "undo:";
-  "~/" = "complete:"; /* escape */
-  "^j" = "insertNewline:"; /* Ctrl-j in case TextExtras isn't around */
+  "~/" = "complete:";
+  "^j" = "insertNewline:";
 }
