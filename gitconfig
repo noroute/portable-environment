@@ -1,6 +1,17 @@
 [include]
   path = ~/.git_userdetails	
 
+##########
+# GitHub #
+##########
+
+[github]
+  user = noroute
+
+###########
+# General #
+###########
+
 [push]
   default = matching
 
@@ -10,6 +21,7 @@
 ##########
 # Colors #
 ##########
+
 [color]
   ui = auto
 
@@ -35,7 +47,9 @@
   excludesfile = ~/.gitignore_global
   autocrlf = input
 
-#######
+###########
+# Aliases #
+###########
 
 [alias]
   # Show verbose output about tags, branches or remotes
@@ -83,3 +97,11 @@
   # Show files ignored by git:
   ign = ls-files -o -i --exclude-standard
 
+###############
+# URL aliases #
+###############
+
+[url "git@github.com:"]
+  insteadOf = "gh:"
+  pushInsteadOf = "github:"
+  pushInsteadOf = "git://github.com/"
