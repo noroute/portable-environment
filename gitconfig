@@ -4,6 +4,9 @@
 [push]
   default = matching
 
+[merge]
+  log = true
+
 ##########
 # Colors #
 ##########
