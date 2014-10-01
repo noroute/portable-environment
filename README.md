@@ -3,7 +3,7 @@ environment (mostly Mac, also used on a Linux box).
 
 Main applications:
  * Emacs24 (through [prelude](http://batsov.com/prelude/))
- * zsh ([oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
+ * zsh ([oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh))
  * git
  * tmux
 
