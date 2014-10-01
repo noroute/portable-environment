@@ -2,7 +2,7 @@
   path = ~/.git_userdetails	
 
 [push]
-  default = simple
+  default = matching
 
 ##########
 # Colors #
@@ -79,3 +79,4 @@
 
   # Show files ignored by git:
   ign = ls-files -o -i --exclude-standard
+
