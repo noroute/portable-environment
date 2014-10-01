@@ -2,7 +2,7 @@ This set of dot- and rc files mostly defines my shell working
 environment (mostly Mac, also used on a Linux box).
 
 Main applications:
- * Emacs24 (through [prelude](http://batsov.com/prelude/)
+ * Emacs24 (through [prelude](http://batsov.com/prelude/))
  * zsh ([oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
  * git
  * tmux
