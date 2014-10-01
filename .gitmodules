@@ -1,0 +1,3 @@
+[submodule ".emacs.d/prelude"]
+	path = .emacs.d/prelude
+	url = https://github.com/noroute/prelude.git
