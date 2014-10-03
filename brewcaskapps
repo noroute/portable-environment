@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+apps=(
+  google-chrome
+  qlcolorcode
+  appcleaner
+  firefox
+  qlmarkdown
+  seil
+  vagrant
+  iterm2
+  qlprettypatch
+  virtualbox
+  flux
+  qlstephen
+  vlc
+  quicklook-json
+  slate
+  tunnelblick
+)
+
+echo "installing apps..."
+brew cask install --appdir="/Applications" ${apps[@]}
