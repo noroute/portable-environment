@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+apps=(
+  ack
+  autojump
+  brew-cask
+  emacs
+  git
+  git-extras
+  git-flow
+  gnupg
+  htop-osx
+  hub
+  markdown
+  python
+  rcm
+  reattach-to-user-namespace
+  ssh-copy-id
+  tmux
+  zsh
+)
+echo "installing apps..."
+brew install  ${apps[@]}
