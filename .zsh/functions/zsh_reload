@@ -1,6 +1,0 @@
-function zsh-reload()
-{
-    echo -n "Reloading zshrc: "
-    . $ZSHRC
-    echo "."
-}

@@ -1,4 +1,0 @@
-if [ -r /etc/debian_version ]; then
-    alias upgrade='debian_upgrade'
-    eval `dircolors`
-fi
