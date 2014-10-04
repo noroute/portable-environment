@@ -1,2 +1,2 @@
 DOTFILES_DIRS="$HOME/git/portable-environment"
-EXCLUDES="README Library"
+EXCLUDES="README.md Library"
