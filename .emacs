@@ -10,4 +10,4 @@
 
 ; load personal config files
 (mapc (lambda (x) (load (substring x 0 -3)))
-      (directory-files my-config-dir nil "^.*el$"))
+      (directory-files my-config-dir nil "^[0-9][0-9]\_.*el$"))
