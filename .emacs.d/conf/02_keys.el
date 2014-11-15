@@ -10,22 +10,7 @@
 ; annoying ctrl-z!
 (global-set-key "\C-z" nil)
 
-(defun switch-to (buffername)
-  (lambda ()
-    (interactive)
-    (switch-to-buffer buffername)))
-
-; views
-(global-set-key (kbd "<f12>") 'org-agenda)
-(global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
-
-; org-mode
-(global-set-key (kbd "<f8>") 'org-clock-goto)
-(global-set-key (kbd "C-<f11>") 'org-clock-in)
-(global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
-(global-set-key (kbd "C-M-r") 'org-capture)
 (global-set-key (kbd "<f9> s") 'bh/go-to-scratch)
-
 
 (defun bh/go-to-scratch ()
   (interactive)
