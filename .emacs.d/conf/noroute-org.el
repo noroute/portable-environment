@@ -1,13 +1,23 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; org-mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; noroute-org.el -- Org mode!
 
+(package-require 'remember)
 (require 'remember)
+(package-require 'org)
 (require 'org)
-(org-remember-insinuate)
 
 (setq org-directory "~/org")
 (setq org-default-notes-file (concat org-directory "/refile.org"))
+
+                                        ; views
+(global-set-key (kbd "<f12>") 'org-agenda)
+(global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
+
+                                        ; org-mode
+(global-set-key (kbd "<f8>") 'org-clock-goto)
+(global-set-key (kbd "C-<f11>") 'org-clock-in)
+(global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
+(global-set-key (kbd "C-M-r") 'org-capture)
+
 
 ; make org-mode use diaries! Yay!
 (setq org-agenda-include-diary t)
@@ -335,3 +345,5 @@ Skips capture tasks and tasks with subtasks"
 
 ; git-sync runs on the hour, so save before
 (run-at-time "00:59" 3600 'org-save-all-org-buffers)
+
+(provide 'noroute-org)
