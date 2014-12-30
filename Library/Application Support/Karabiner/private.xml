@@ -1,17 +1,16 @@
 <?xml version="1.0"?>
 <root>
-    <item>
-            <name>Remap Right Control to Hyper</name>
-            <appendix>OS X doesn't have a Hyper. This maps right control to Control + Shift + Option + Command.</appendix>
-            
-            <identifier>space_cadet.left_control_to_hyper</identifier>
-            
-            <autogen>
-                --KeyToKey--
-                KeyCode::CONTROL_R,
-                
-                KeyCode::COMMAND_L,
-                ModifierFlag::OPTION_L | ModifierFlag::SHIFT_L | ModifierFlag::CONTROL_L
-            </autogen>
-        </item>
+  <item>
+    <name>Remap Caps Lock to Hyper with Escape on tap</name>
+    <appendix>OS X doesn't have a Hyper. This maps caps lock (actually F19) to Control + Shift + Option + Command, unless you tap it. Then it sends Escape.</appendix>
+    <identifier>caps_lock_to_hyper_or_escape</identifier>
+    <autogen>
+      --KeyOverlaidModifier--
+      KeyCode::F19,
+
+      KeyCode::COMMAND_L,
+      ModifierFlag::OPTION_L | ModifierFlag::SHIFT_L | ModifierFlag::CONTROL_L,
+      KeyCode::ESCAPE
+    </autogen>
+  </item>
 </root>
