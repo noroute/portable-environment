@@ -2,9 +2,9 @@
 
 apps=(
   ack
-  autojump
   brew-cask
   emacs
+  fasd
   git
   git-extras
   git-flow
