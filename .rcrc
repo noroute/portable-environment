@@ -1,2 +1,2 @@
 DOTFILES_DIRS="$HOME/git/portable-environment"
-EXCLUDES="README.md Library"
+EXCLUDES="README.md Library oh-my-zsh"
