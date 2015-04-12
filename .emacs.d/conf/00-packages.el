@@ -41,6 +41,7 @@
                        projectile
                        rainbow-delimiters
                        rainbow-mode
+                       rspec-mode
                        rpm-spec-mode
                        ruby-tools
                        scss-mode
