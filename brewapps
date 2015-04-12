@@ -9,6 +9,7 @@ apps=(
   git-extras
   git-flow
   gnupg
+  httpie
   htop-osx
   hub
   markdown
