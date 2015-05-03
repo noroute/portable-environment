@@ -51,6 +51,8 @@
 # Aliases #
 ###########
 
+# Credit mostly to mathiasbynens: https://github.com/mathiasbynens/dotfiles/blob/master/.gitconfig
+
 [alias]
   # Show verbose output about tags, branches or remotes
   tags = tag -l
