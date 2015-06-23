@@ -12,6 +12,7 @@
 
 (setq extra-packages '(
                        ack-and-a-half
+                       smartscan
                        cider
                        clojure-mode
                        clojure-snippets
