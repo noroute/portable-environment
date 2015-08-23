@@ -10,27 +10,16 @@
 ; annoying ctrl-z!
 (global-set-key "\C-z" nil)
 
-(defun switch-to (buffername)
-  (lambda ()
-    (interactive)
-    (switch-to-buffer buffername)))
+; frame handling
+(global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
+(global-set-key (kbd "C-x C-c") 'delete-frame)
+(define-key global-map (kbd "C-x C-n") 'make-frame-command)
 
-; views
-(global-set-key (kbd "<f12>") 'org-agenda)
-(global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
+;; Comment/uncomment block
+(global-set-key (kbd "C-c c") 'comment-or-uncomment-region)
 
-; org-mode
-(global-set-key (kbd "<f8>") 'org-clock-goto)
-(global-set-key (kbd "C-<f11>") 'org-clock-in)
-(global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
-(global-set-key (kbd "C-M-r") 'org-capture)
-(global-set-key (kbd "<f9> s") 'bh/go-to-scratch)
-
-
-(defun bh/go-to-scratch ()
-  (interactive)
-  (switch-to-buffer "*scratch*")
-  (delete-other-windows))
+; insta-scratch
+(global-set-key (kbd "C-c b") 'prelude-create-scratch-buffer)
 
 ; Join from anywhere
 (global-set-key (kbd "M-j")
