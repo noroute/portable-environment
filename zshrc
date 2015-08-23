@@ -26,15 +26,20 @@ bindkey -e
 # Java
 export JAVA_HOME=$(/usr/libexec/java_home)
 
+#### Prefer Homebrew ####
+PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+
+export PATH=$HOME/bin:$PATH
+
 #### RVM ###
 PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 
-#### Prefer Homebrew ####
-PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+### pyenv ###
+eval "$(pyenv virtualenv-init -)"
 
-export PATH=$HOME/bin:$PATH
+eval $($HOME/bin/setproxy)
 
 # Finally source ohmyzsh
 source $ZSH/oh-my-zsh.sh
