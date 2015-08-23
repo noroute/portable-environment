@@ -11,7 +11,7 @@ DISABLE_AUTO_UPDATE="true"
 DISABLE_AUTO_TITLE="true"
 COMPLETION_WAITING_DOTS="true"
 
-plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx perl python ruby rvm pip python sbt scala ssh-agent svn tmux urltools vagrant zsh-syntax-highlighting)
+plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx perl python ruby rvm pip pyenv python sbt scala ssh-agent svn tmux urltools vagrant zsh-syntax-highlighting)
 
 # Customize to your needs...
 
