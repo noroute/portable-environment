@@ -14,6 +14,8 @@ COMPLETION_WAITING_DOTS="true"
 plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx perl python ruby rvm pip pyenv python sbt scala ssh-agent svn tmux urltools vagrant zsh-syntax-highlighting)
 
 # Customize to your needs...
+export LOCALE="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
 
 # share_history is annoying with multiple shells at the same time
 unsetopt share_history
