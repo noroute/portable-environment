@@ -1,6 +1,7 @@
 (require 'package)
 (dolist (source '(("melpa" . "http://melpa.org/packages/")
                   ("marmalade" . "http://marmalade-repo.org/packages/")
+
                   ("elpa" . "http://tromey.com/elpa/")))
   (add-to-list 'package-archives source t))
 (package-initialize)
@@ -12,7 +13,8 @@
 
 (setq extra-packages '(
                        ack-and-a-half
-                       smartscan
+                       avy
+                       ace-window
                        cider
                        clojure-mode
                        clojure-snippets
@@ -46,13 +48,14 @@
                        rpm-spec-mode
                        ruby-tools
                        scss-mode
+                       smartscan
                        smartparens
                        undo-tree
                        vagrant
                        web-mode
                        yasnippet
                        zenburn-theme
-                       ace-jump-mode))
+                       ))
 
 (dolist (package extra-packages)
   (unless (package-installed-p package)
