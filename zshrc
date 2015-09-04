@@ -37,6 +37,7 @@ PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 
 ### pyenv ###
+eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 eval $($HOME/bin/setproxy)
