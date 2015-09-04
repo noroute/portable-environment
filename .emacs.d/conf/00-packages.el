@@ -22,6 +22,7 @@
                        crontab-mode
                        csv-mode
                        diminish
+                       elpy
                        epl
                        flx-ido
                        flycheck
