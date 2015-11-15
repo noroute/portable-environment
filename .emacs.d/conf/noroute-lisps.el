@@ -1,5 +1,7 @@
 ;;; noroute-lisps.el -- Lisps
 
+(require 'req-package)
+
 (setq lisp-modes
       '(scheme-mode emacs-lisp-mode lisp-mode clojure-mode))
 
@@ -26,15 +28,15 @@
 (define-key emacs-lisp-mode-map (kbd "M-.") 'find-function-at-point)
 
 ;;; Clojure
-(package-require 'clojure-mode)
-(add-to-list 'auto-mode-alist '("\\.cljs?$" . clojure-mode))
-(lambda-as-lambda 'clojure-mode "(\\(\\<fn\\>\\)")
+(req-package 'clojure-mode
+  :config (progn (add-to-list 'auto-mode-alist '("\\.cljs?$" . clojure-mode))
+                 (lambda-as-lambda 'clojure-mode "(\\(\\<fn\\>\\)")))
 
 ;; nRepl
-(package-require 'cider)
-(eval-after-load "clojure-mode" '(require 'cider))
-(setq nrepl-lein-command "lein")
-(setq nrepl-server-command "echo \"lein repl :headless\" | $SHELL -l")
+(req-package 'cider
+  :config (progn (eval-after-load "clojure-mode" '(require 'cider))
+                 (setq nrepl-lein-command "lein")
+                 (setq nrepl-server-command "echo \"lein repl :headless\" | $SHELL -l")))
 
 ;; Run tests in nRepl
 (defun nrepl-run-tests (ns)
@@ -50,10 +52,11 @@
   '(define-key clojure-mode-map (kbd "C-c C-,") 'nrepl-run-tests))
 
 ;;Kibit
-(require 'compile)
-(add-to-list 'compilation-error-regexp-alist-alist
-             '(kibit "At \\([^:]+\\):\\([[:digit:]]+\\):" 1 2 nil 0))
-(add-to-list 'compilation-error-regexp-alist 'kibit)
+(req-package 'compile
+  :config (progn (add-to-list 'compilation-error-regexp-alist-alist
+                              '(kibit "At \\([^:]+\\):\\([[:digit:]]+\\):" 1 2 nil 0))
+                 (add-to-list 'compilation-error-regexp-alist 'kibit)))
+
 (defun kibit ()
   "Run kibit on the current project.
 Display the results in a hyperlinked *compilation* buffer."
@@ -61,7 +64,7 @@ Display the results in a hyperlinked *compilation* buffer."
   (compile "lein kibit"))
 
 ;; Cljsbuild
-(package-require 'cljsbuild-mode)
+(req-package 'cljsbuild-mode)
 
 ;;; Lolisp
 (define-derived-mode lolisp-mode scheme-mode "Lolisp")
@@ -93,4 +96,5 @@ Display the results in a hyperlinked *compilation* buffer."
     (nrepl-switch-to-repl-buffer nil)
     (insert "(require 'cljs.repl.node) (cljs.repl.node/run-node-nrepl)")
     (nrepl-send-input)))
+
 (provide 'noroute-lisps)

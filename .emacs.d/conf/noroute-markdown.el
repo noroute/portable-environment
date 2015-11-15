@@ -1,7 +1,8 @@
 ;;; noroute-markdown.el -- Markdown setup
-(package-require 'markdown-mode)
+(require 'req-package)
 
-(add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
+(req-package 'markdown-mode
+  :config (progn (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+                 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))))
 
 (provide 'noroute-markdown)

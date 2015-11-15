@@ -1,22 +1,21 @@
 ;;; noroute-org.el -- Org mode!
 
-(package-require 'remember)
-(require 'remember)
-(package-require 'org)
-(require 'org)
+(require 'req-package)
 
-(setq org-directory "~/org")
-(setq org-default-notes-file (concat org-directory "/refile.org"))
+(req-package 'org
+  :require (remember)
+  :config (progn (setq org-directory "~/org")
+                 (setq org-default-notes-file (concat org-directory "/refile.org"))
 
                                         ; views
-(global-set-key (kbd "<f12>") 'org-agenda)
-(global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
+                 (global-set-key (kbd "<f12>") 'org-agenda)
+                 (global-set-key (kbd "<f8>") 'org-cycle-agenda-files)
 
                                         ; org-mode
-(global-set-key (kbd "<f8>") 'org-clock-goto)
-(global-set-key (kbd "C-<f11>") 'org-clock-in)
-(global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
-(global-set-key (kbd "C-M-r") 'org-capture)
+                 (global-set-key (kbd "<f8>") 'org-clock-goto)
+                 (global-set-key (kbd "C-<f11>") 'org-clock-in)
+                 (global-set-key (kbd "M-<f11>") 'org-resolve-clocks)
+                 (global-set-key (kbd "C-M-r") 'org-capture)))
 
 
 ; make org-mode use diaries! Yay!
