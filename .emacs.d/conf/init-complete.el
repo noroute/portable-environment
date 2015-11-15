@@ -1,8 +1,9 @@
 ;;; noroute-complete.el -- Auto completion
 (require 'req-package)
+
 (req-package 'company
+  :bind ("C-\\" . company-complete)
   :config (progn (add-hook 'after-init-hook 'global-company-mode)
-                 (global-set-key (kbd "C-\\") 'company-complete)
                  (setq company-global-modes '(not term-mode))
                  (setq company-minimum-prefix-length 2
                        company-selection-wrap-around t
@@ -15,4 +16,4 @@
   :require (company)
   :config (progn (add-to-list 'company-backends 'company-tern)))
 
-(provide 'noroute-complete)
+(provide 'init-complete)
