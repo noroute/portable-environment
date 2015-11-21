@@ -1,6 +1,5 @@
 (require 'req-package)
 
-(setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 
 ;; M-v always undoes C-v
