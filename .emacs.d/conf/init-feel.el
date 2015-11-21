@@ -59,6 +59,10 @@
   :config
   (global-set-key (kbd "s-r") 'rotate-layout))
 
+(req-package zop-to-char
+  :bind (("M-z" . zop-to-char)
+	 ("M-Z" . zop-up-to-char)))
+
 (defun rename-buffer-and-file ()
   "Rename current buffer and if the buffer is visiting a file, rename it too."
   (interactive)
