@@ -51,7 +51,6 @@
   :config
   (column-number-mode 1))
 
-
 (req-package tool-bar
   :config
   (tool-bar-mode -1))
