@@ -4,6 +4,7 @@
 
 (setq use-dialog-box nil)
 (setq enable-local-variables nil)
+
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; Also auto refresh dired, but be quiet about it
@@ -63,6 +64,10 @@
 (req-package zop-to-char
   :bind (("M-z" . zop-to-char)
 	 ("M-Z" . zop-up-to-char)))
+
+(req-package sos :commands sos)
+
+(req-package howdoi)
 
 (defun rename-buffer-and-file ()
   "Rename current buffer and if the buffer is visiting a file, rename it too."
