@@ -14,6 +14,13 @@
   :config (progn ((setq save-place-file (expand-file-name "saveplace" my-emacs-dir))
 		  (setq-default save-place t))))
 
+(req-package savekill
+  :config (progn (setq savekill-max-saved-items nil)
+                 (load save-kill-file-name t)))
+
+(req-package savehist
+  :config (savehist-mode 1))
+
 (req-package recentf
   :config (recentf-mode 1))
 
@@ -27,10 +34,6 @@
 
 (req-package-hooks-add-execute 'before-save 'delete-trailing-whitespace)
 
-(req-package savekill
-  :config (progn (setq savekill-max-saved-items nil)
-                 (load save-kill-file-name t)))
-
 (req-package smex
   :require key-chord
   :bind ("M-x" . smex)
@@ -43,9 +46,6 @@
   :require key-chord
   :commands paradox-list-packages
   :init (key-chord-define-global ";p" 'paradox-list-packages))
-
-(req-package savehist
-  :config (savehist-mode 1))
 
 (req-package duplicate-thing
   :config (progn (global-set-key (kbd "C-c d") 'duplicate-thing)))
