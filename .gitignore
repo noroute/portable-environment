@@ -8,3 +8,4 @@
 /.emacs.d/url/cookies
 /.emacs.d/projectile-bookmarks.eld
 /.emacs.d/menu_log.notes
+/.emacs.d/conf/*.elc
