@@ -6,6 +6,18 @@
 ;; M-v always undoes C-v
 (setq scroll-preserve-screen-position 'always)
 
+(global-hl-line-mode +1)
+
+(req-package uniquify
+  :config (progn ((setq uniquify-buffer-name-style 'forward)
+		  (setq uniquify-separator "/")
+		  (setq uniquify-after-kill-buffer-p t)
+		  (setq uniquify-ignore-buffers-re "^\\*"))))
+
+(req-package whitespace
+  :config (progn (setq whitespace-line-column 80)
+		 (setq whitespace-style '(face tabs empty trailing lines-tail))))
+
 (req-package solarized-theme
   :config (progn (load-theme 'solarized-dark t)))
 

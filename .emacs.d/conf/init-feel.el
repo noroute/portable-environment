@@ -10,6 +10,10 @@
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
 
+(req-package saveplace
+  :config (progn ((setq save-place-file (expand-file-name "saveplace" my-emacs-dir))
+		  (setq-default save-place t))))
+
 (req-package recentf
   :config (recentf-mode 1))
 
@@ -54,3 +58,33 @@
 (req-package rotate
   :config
   (global-set-key (kbd "s-r") 'rotate-layout))
+
+(defun rename-buffer-and-file ()
+  "Rename current buffer and if the buffer is visiting a file, rename it too."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (rename-buffer (read-from-minibuffer "New name: " (buffer-name)))
+      (let ((new-name (read-file-name "New name: " filename)))
+        (cond
+         ((vc-backend filename) (vc-rename-file filename new-name))
+         (t
+          (rename-file filename new-name t)
+          (set-visited-file-name new-name t t)))))))
+
+(defun delete-file-and-buffer ()
+  "Kill the current buffer and deletes the file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (when filename
+      (if (vc-backend filename)
+          (vc-delete-file filename)
+        (when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
+          (delete-file filename delete-by-moving-to-trash)
+          (message "Deleted file %s" filename)
+          (kill-buffer))))))
+
+(global-set-key (kbd "C-c r") 'rename-buffer-and-file)
+(global-set-key (kbd "C-c D") 'delete-buffer-and-file)
+
+(provide 'init-feel)

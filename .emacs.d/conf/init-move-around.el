@@ -2,21 +2,61 @@
 
 (req-package ace-window
   :require key-chord
-  :bind ("C-x o" . ace-window)
+  :bind ("s-w" . ace-window)
   :init (key-chord-define-global ";o" 'ace-window))
 
-(req-package ace-jump-mode
-  :bind (("M-/" . ace-jump-word-mode)
-         ("s-c" . ace-jump-char-mode)
-         ("M-g M-g" . ace-jump-line-mode)))
-
 (req-package ace-link :config (ace-link-setup-default))
-
 
 (req-package ace-jump-buffer
   :require (shell)
   :bind ("M-?" . ace-jump-buffer))
 
+(req-package avy
+  :bind (("C-c j" . avy-goto-word-or-subword-1)
+         ("s-." . avy-goto-word-or-subword-1)))
+
 (req-package move-text
   :config (progn (global-set-key (kbd "M-n") 'move-text-down)
                  (global-set-key (kbd "M-p") 'move-text-up)))
+
+(req-package multiple-cursors
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+         ("C->"         . mc/mark-next-like-this)
+         ("C-<"         . mc/mark-previous-like-this)
+         ("C-c C-<"     . mc/mark-all-like-this)))
+
+;; Visual regexp
+(req-package visual-regexp
+  :bind ("C-c m" . vr/mc-mark))
+
+;; Move more quickly
+(global-set-key (kbd "C-S-n")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (next-line 5))))
+
+(global-set-key (kbd "C-S-p")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (previous-line 5))))
+
+(global-set-key (kbd "C-S-f")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (forward-char 5))))
+
+(global-set-key (kbd "C-S-b")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (backward-char 5))))
+
+(global-set-key [remap goto-line] 'goto-line-with-feedback)
+
+(defun goto-line-with-feedback ()
+  "Show line numbers temporarily, while prompting for the line number input"
+  (interactive)
+  (unwind-protect
+      (progn
+        (linum-mode 1)
+        (goto-line (read-number "Goto line: ")))
+    (linum-mode -1)))

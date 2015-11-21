@@ -1,5 +1,6 @@
 (require 'package)
 
+(defconst my-emacs-dir "~/.emacs.d")
 (defconst my-custom-file "~/.emacs.d/custom.el")
 
 (setq custom-file my-custom-file)
