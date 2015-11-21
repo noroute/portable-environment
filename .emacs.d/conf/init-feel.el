@@ -10,6 +10,8 @@
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
 
+(desktop-save-mode 1)
+
 (req-package saveplace
   :config (progn ((setq save-place-file (expand-file-name "saveplace" my-emacs-dir))
 		  (setq-default save-place t))))
@@ -36,7 +38,8 @@
 
 (req-package smex
   :require key-chord
-  :bind ("M-x" . smex)
+  :bind (("M-x" . smex)
+	 ("M-X" . smex-major-mode-commands))
   :config (smex-initialize))
 
 (req-package string-edit
