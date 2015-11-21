@@ -1,11 +1,17 @@
 (require 'req-package)
 
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+
 ;; M-v always undoes C-v
 (setq scroll-preserve-screen-position 'always)
 
 ;; Also auto refresh dired, but be quiet about it
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
+
+(req-package solarized-theme
+  :config (progn (load-theme 'solarized-dark t)))
 
 (req-package timeclock
   :config (progn (display-time-mode 1)))
@@ -83,11 +89,6 @@
 (req-package diff-hl
   :require smartrep
   :config (global-diff-hl-mode 1))
-
-
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
-
 
 (setq make-pointer-invisible nil)
 
