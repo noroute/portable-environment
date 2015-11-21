@@ -10,8 +10,6 @@
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
 
-(desktop-save-mode 1)
-
 (req-package saveplace
   :config (progn ((setq save-place-file (expand-file-name "saveplace" my-emacs-dir))
 		  (setq-default save-place t))))
