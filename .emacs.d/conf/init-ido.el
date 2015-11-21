@@ -9,6 +9,7 @@
                  ;; disable ido faces to see flx highlights.
                  (setq ido-enable-flex-matching t)
                  (setq ido-use-faces t)
+		 (setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
                  (global-set-key (kbd "C-x C-f") 'ido-find-file)
 		 (global-set-key (kbd "C-x C-b") 'ido-switch-buffer)
                  (key-chord-define-global "xb" 'ido-switch-buffer)))
