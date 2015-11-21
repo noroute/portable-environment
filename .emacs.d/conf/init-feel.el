@@ -1,5 +1,8 @@
 (require 'req-package)
 
+(setq exec-path (append exec-path '("/usr/local/bin")))
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
+
 (setq-default bookmark-save-flag 1)
 
 (setq use-dialog-box nil)
