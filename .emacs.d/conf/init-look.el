@@ -6,10 +6,6 @@
 ;; M-v always undoes C-v
 (setq scroll-preserve-screen-position 'always)
 
-;; Also auto refresh dired, but be quiet about it
-(setq global-auto-revert-non-file-buffers t)
-(setq auto-revert-verbose nil)
-
 (req-package solarized-theme
   :config (progn (load-theme 'solarized-dark t)))
 
@@ -86,11 +82,17 @@
                (req-package-hooks-add-execute 'emacs-lisp-mode (lambda () (rainbow-delimiters-mode 1)))
                (req-package-hooks-add-execute 'clojure-mode (lambda () (rainbow-delimiters-mode 1)))))
 
+(req-package zoom-frm
+  :commands zoom-in/out
+  :init (progn (define-key ctl-x-map [(control ?+)] 'zoom-in/out)
+	       (define-key ctl-x-map [(control ?-)] 'zoom-in/out)
+	       (define-key ctl-x-map [(control ?=)] 'zoom-in/out)
+	       (define-key ctl-x-map [(control ?0)] 'zoom-in/out)))
+
 (req-package diff-hl
   :require smartrep
   :config (global-diff-hl-mode 1))
 
 (setq make-pointer-invisible nil)
 
-
-(provide 'init-look-and-feel)
+(provide 'init-look)
