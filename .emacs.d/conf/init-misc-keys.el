@@ -3,10 +3,6 @@
 (global-set-key "\C-x\C-k" 'kill-region)
 (global-set-key "\C-c\C-k" 'kill-region)
 
-; do M-x without ALT
-(global-set-key "\C-x\C-m" 'execute-extended-command)
-(global-set-key "\C-c\C-m" 'execute-extended-command)
-
 ; annoying ctrl-z!
 (global-set-key "\C-z" nil)
 
@@ -17,9 +13,6 @@
 
 ;; Comment/uncomment block
 (global-set-key (kbd "C-c c") 'comment-or-uncomment-region)
-
-; insta-scratch
-(global-set-key (kbd "C-c b") 'prelude-create-scratch-buffer)
 
 ; Join from anywhere
 (global-set-key (kbd "M-j")
