@@ -9,6 +9,7 @@
                  (setq ido-enable-flex-matching t)
                  (setq ido-use-faces nil)
                  (global-set-key (kbd "C-x C-f") 'ido-find-file)
+		 (global-set-key (kbd "C-x C-b") 'ido-switch-buffer)
                  (key-chord-define-global "xb" 'ido-switch-buffer)))
 
 (req-package ido-at-point

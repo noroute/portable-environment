@@ -3,7 +3,6 @@
 (req-package helm
   :require key-chord
   :config (progn (require 'helm-config)
-                 (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
                  (key-chord-define-global ";l" 'helm-bookmarks)
                  (global-set-key (kbd "C-c y") 'helm-show-kill-ring)
                  (global-set-key (kbd "C-x C-r") 'helm-recentf)
