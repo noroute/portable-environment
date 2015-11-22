@@ -52,6 +52,7 @@
          (add-to-list 'sml/hidden-modes " FIC")
          (add-to-list 'sml/hidden-modes " Abbrev")
          (add-to-list 'sml/hidden-modes " ARev")
+         (add-to-list 'sml/hidden-modes " company")
          (sml/setup)))
 
 (req-package anzu
@@ -67,8 +68,6 @@
 (req-package tool-bar
   :config
   (tool-bar-mode -1))
-
-;; scroll bar
 
 (req-package scroll-bar
   :config
