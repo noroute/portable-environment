@@ -10,6 +10,9 @@
   :require key-chord
   :commands magit-status
   :init (progn (key-chord-define-global ";m" 'magit-status)
+	       (global-set-key (kbd "C-x v l") 'magit-log-buffer-file)
+	       (global-set-key (kbd "C-x v r") 'magit-reset-hard)
+	       (global-set-key (kbd "C-x v t") 'magit-stash)
                (setq magit-last-seen-setup-instructions "1.4.0")
                (setq magit-auto-revert-mode t))
   :config (progn (key-chord-define magit-log-mode-map ";j" "n")
