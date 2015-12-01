@@ -7,6 +7,10 @@
 
 (req-package ace-link :config (ace-link-setup-default))
 
+(req-package goto-chg
+  :config (progn (global-set-key (kbd "C-c b ,") 'goto-last-change)
+		 (global-set-key (kbd "C-c b ." 'goto-last-change-reverse))))
+
 (req-package ace-jump-buffer
   :require (shell)
   :bind ("M-?" . ace-jump-buffer))
