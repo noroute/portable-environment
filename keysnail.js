@@ -4,21 +4,6 @@
 // Put all your code except special key, set*key, hook, blacklist.
 // ========================================================================= //
 //{{%PRESERVE%
-plugins.options["tanything_opt.keymap"] = {
-    "C-z"   : "prompt-toggle-edit-mode",
-    "SPC"   : "prompt-next-page",
-    "b"     : "prompt-previous-page",
-    "j"     : "prompt-next-completion",
-    "k"     : "prompt-previous-completion",
-    "g"     : "prompt-beginning-of-candidates",
-    "G"     : "prompt-end-of-candidates",
-    "D"     : "prompt-cancel",
-    // Tanything specific actions
-    "q"     : "localClose",
-    "d"     : "localDomainclose",
-    "e"     : "localMovetoend"
-};
-
 plugins.options["metaplus.metakeys"] = ["ESC"];
 //}}%PRESERVE%
 // ========================================================================= //
@@ -247,10 +232,6 @@ key.setViewKey(['C-x', 'h'], function (ev) {
 key.setViewKey('f', function (ev) {
                 command.focusElement(command.elementsRetrieverTextarea, 0);
             }, 'Focus to the first textarea', true);
-
-key.setViewKey('a', function (ev, arg) {
-                   ext.exec("tanything", arg);
-               }, 'view all tabs', true);
 
 key.setViewKey(['C-c', 'c'], function (aEvent, aArg) {
     ext.exec("hok-start-foreground-mode", aArg);
