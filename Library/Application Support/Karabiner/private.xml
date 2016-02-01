@@ -13,4 +13,29 @@
       KeyCode::ESCAPE
     </autogen>
   </item>
+  <!-- Logitech presenter support -->
+  <appdef>
+    <appname>KEYNOTE</appname>
+    <equal>com.apple.iWork.Keynote</equal>
+  </appdef>
+  <devicevendordef>
+    <vendorname>LOGITECH</vendorname>
+    <vendorid>0x046d</vendorid>
+  </devicevendordef>
+  <deviceproductdef>
+    <productname>Rx00</productname>
+    <productid>0xc538</productid>
+  </deviceproductdef>
+  <item>
+    <name>Logitech Presenter with Keynote</name>
+    <identifier>private.app_keynote_logitech_presenter</identifier>
+    <only>KEYNOTE</only>
+    <device_only>DeviceVendor::LOGITECH, DeviceProduct::Rx00</device_only>
+    <autogen>
+      --KeyToKey-- KeyCode::F5, KeyCode::P, ModifierFlag::OPTION_L | ModifierFlag::COMMAND_L
+    </autogen>
+    <autogen>
+      --KeyToKey-- KeyCode::DOT, KeyCode::B
+    </autogen>
+  </item>
 </root>
