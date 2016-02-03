@@ -22,6 +22,9 @@
   :config (progn (setq savekill-max-saved-items nil)
                  (load save-kill-file-name t)))
 
+(req-package which-key
+  :config (progn (which-key-mode)))
+
 (req-package savehist
   :config (savehist-mode 1))
 
