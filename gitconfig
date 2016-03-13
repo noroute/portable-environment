@@ -8,6 +8,9 @@
 [github]
   user = noroute
 
+[hub]
+  protocol = https
+
 ###########
 # General #
 ###########
