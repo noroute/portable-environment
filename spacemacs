@@ -38,6 +38,7 @@ values."
      java
      javascript
      markdown
+     octave
      org
      puppet
      python
