@@ -21,6 +21,8 @@
 [merge]
   log = true
 
+[pull]
+  rebase = true
 ##########
 # Colors #
 ##########
