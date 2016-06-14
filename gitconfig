@@ -16,10 +16,7 @@
 ###########
 
 [push]
-  default = matching
-
-[merge]
-  log = true
+  default = simple
 
 [pull]
   rebase = true
