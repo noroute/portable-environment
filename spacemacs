@@ -28,6 +28,7 @@ values."
      better-defaults
      clojure
      dockerfile
+     elm
      emacs-lisp
      git
      github
