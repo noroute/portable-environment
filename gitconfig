@@ -101,6 +101,9 @@
   # Show files ignored by git:
   ign = ls-files -o -i --exclude-standard
 
+  # 100 most often changed files
+  top100 = "!git log --pretty=format: --name-only | grep -v -e '^$' | sort | uniq -c | sort -rg | head -100"
+
 ###############
 # URL aliases #
 ###############
