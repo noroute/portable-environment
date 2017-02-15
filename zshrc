@@ -1,3 +1,5 @@
+source ~/.profile
+
 # Path to your oh-my-zsh configuration.
 ZSH=$HOME/.oh-my-zsh
 
@@ -11,7 +13,7 @@ DISABLE_AUTO_UPDATE="true"
 DISABLE_AUTO_TITLE="true"
 COMPLETION_WAITING_DOTS="true"
 
-plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx perl python ruby rvm pip pyenv python sbt scala ssh-agent svn tmux urltools vagrant zsh-syntax-highlighting)
+plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx python ruby rvm pip pyenv python ssh-agent tmux urltools vagrant zsh-syntax-highlighting)
 
 # Customize to your needs...
 export LOCALE="en_US.UTF-8"
@@ -25,25 +27,21 @@ bindkey -e
 
 # Java
 export JAVA_HOME=$(/usr/libexec/java_home)
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git ruby brew extract fasd gem github gradle node npm osx perl python pyenv rvm ssh-agent svn vagrant sbt scala urltools)
 
 #### Prefer Homebrew ####
 PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
 export PATH=$HOME/bin:$PATH
 
-#### RVM ###
-PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
-
 ### pyenv ###
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
-eval $($HOME/bin/setproxy)
+export GOPATH="$HOME/go"
+
+## NVM ##
+export NVM_DIR="/Users/flo/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # Finally source ohmyzsh
 source $ZSH/oh-my-zsh.sh
