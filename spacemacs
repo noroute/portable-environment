@@ -318,7 +318,7 @@ you should place you code here."
                     (quote
                      (category-keep))))))))))
 
-  (setq org-capture-templates
+  (setq org-capture-templates                         ; http://cachestocaches.com/2016/9/my-workflow-org-agenda/
    (quote
     (("t" "todo" entry (file org-default-notes-file)
       "* TODO %?\n%u\n%a\n" :clock-in t :clock-resume t)
