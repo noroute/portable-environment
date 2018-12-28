@@ -18,6 +18,7 @@ values."
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
    '(
+     csv
      sql
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
@@ -28,7 +29,7 @@ values."
      auto-completion
      better-defaults
      clojure
-     dockerfile
+     docker
      elm
      emacs-lisp
      git
@@ -269,13 +270,83 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place you code here."
-  )
 
-;; Do not write anything past this comment. This is where Emacs will
+  ; org-mode settings
+  (setq org-agenda-files '("~/org/agenda"))
+  (setq org-log-done-with-time t)
+  (setq org-refile-targets
+    (quote
+     ((nil :maxlevel . 4)
+      (org-agenda-files :maxlevel . 4))))
+
+  (setq org-stuck-projects
+    (quote
+     ("-journal+LEVEL=2/-DONE"
+      ("TODO" "NEXT" "IN-PROGRESS")
+      nil "")))
+  (setq org-todo-keywords
+    (quote
+     ((sequence "TODO(t)" "NEXT(n)" "WAITING(w@)" "IN-PROGRESS(p)" "|" "DONE(d@)" "CANCELLED(c@)" "DELEGATED(@)" "SOMEDAY(s)"))))
+
+  (setq org-agenda-custom-commands
+        (quote
+         (("i" "Inbox/Plan"
+           ((tags-todo "SCHEDULED=\"\"&DEADLINE=\"\""
+                       ((org-agenda-overriding-header "Unplanned")
+                        (org-tags-match-list-sublevels t)))
+            (todo "REFILE|SOMEDAY"
+                  ((org-agenda-overriding-header "Refile/Someday")
+                   (org-tags-match-list-sublevels t)
+                   (org-agenda-sorting-strategy
+                    (quote
+                     (category-keep)))))
+            (tags "IDEA"
+                  ((org-agenda-overriding-header "Ideas")
+                   (org-tags-match-list-sublevels t)))))
+          (" " "Agenda"
+           ((agenda "" nil)
+            (todo "NEXT"
+                  ((org-agenda-overriding-header "Next tasks")
+                   (org-tags-match-list-sublevels t)
+                   (org-agenda-sorting-strategy
+                    (quote
+                     (category-keep)))))
+            (todo "WAITING"
+                  ((org-agenda-overriding-header "Waiting tasks")
+                   (org-tags-match-list-sublevels t)
+                   (org-agenda-sorting-strategy
+                    (quote
+                     (category-keep))))))))))
+
+  (setq org-capture-templates
+   (quote
+    (("t" "todo" entry (file org-default-notes-file)
+      "* TODO %?\n%u\n%a\n" :clock-in t :clock-resume t)
+     ("m" "Meeting" entry (file org-default-notes-file)
+      "* MEETING with %? :MEETING:\n%t" :clock-in t :clock-resume t)
+     ("d" "Diary" entry (file+datetree "~/org/agenda/diary.org")
+      "* %?\n%U\n" :clock-in t :clock-resume t)
+     ("i" "Idea" entry (file org-default-notes-file)
+      "* %? :IDEA:\n%t" :clock-in t :clock-resume t)
+     ("n" "Next Task" entry (file+headline org-default-notes-file "Tasks")
+      "** NEXT %? \nDEADLINE: %t"))))
+)
+
+  ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(js2-basic-offset 2))
+ '(js2-basic-offset 2)
+ '(package-selected-packages
+   (quote
+    (dockerfile-mode docker tablist docker-tramp csv-mode yapfify yaml-mode ws-butler winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe vagrant-tramp vagrant uuidgen use-package unfill toc-org tide tagedit sql-indent spaceline smeargle slim-mode scss-mode sass-mode rvm ruby-tools ruby-test-mode rubocop rspec-mode robe restart-emacs rbenv rake rainbow-delimiters pyvenv pytest pyenv-mode py-isort puppet-mode pug-mode popwin pip-requirements persp-mode paradox orgit org-projectile org-present org-pomodoro org-mime org-download org-bullets open-junk-file neotree mwim move-text mmm-mode minitest markdown-toc magit-gitflow magit-gh-pulls macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode intero insert-shebang indent-guide hy-mode hungry-delete htmlize hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-hoogle helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio go-guru go-eldoc gnuplot github-search github-clone github-browse-file gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gist gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flycheck-haskell flycheck-elm flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu emmet-mode elm-mode elisp-slime-nav ein dumb-jump diff-hl define-word cython-mode company-web company-tern company-statistics company-shell company-go company-ghci company-ghc company-emacs-eclim company-cabal company-ansible company-anaconda column-enforce-mode coffee-mode cmm-mode clojure-snippets clj-refactor clean-aindent-mode cider-eval-sexp-fu chruby bundler auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell))))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
