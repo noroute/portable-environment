@@ -73,6 +73,9 @@
   # Pull in remote changes for the current repository and all its submodules
   p = !"git pull; git submodule foreach git pull origin master"
 
+  # Reset all submodules
+  rs = !"git submodule foreach 'git checkout master && git reset --hard $sha1'"
+
   # Credit an author on the latest commit
   credit = "!f() { git commit --amend --author \"$1 <$2>\" -C HEAD; }; f"
 
