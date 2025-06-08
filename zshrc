@@ -13,7 +13,7 @@ DISABLE_AUTO_UPDATE="true"
 DISABLE_AUTO_TITLE="true"
 COMPLETION_WAITING_DOTS="true"
 
-plugins=(brew bundler colored-man encode64 extract fasd gem git github git-extras gradle httpie mvn node npm osx python ruby rvm pip pyenv python ssh-agent tmux urltools vagrant zsh-syntax-highlighting)
+plugins=(brew encode64 extract fasd git github git-extras httpie node npm nvm python pip pyenv python ssh-agent tmux urltools)
 
 # Customize to your needs...
 export LOCALE="en_US.UTF-8"
