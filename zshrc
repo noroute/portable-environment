@@ -25,8 +25,9 @@ export PATH=$HOME/bin:$PATH
 export GOPATH="$HOME/go"
 
 ## NVM ##
-export NVM_DIR="/Users/flo/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 # Finally source ohmyzsh
 source $ZSH/oh-my-zsh.sh
