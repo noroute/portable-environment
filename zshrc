@@ -17,17 +17,10 @@ unsetopt share_history
 # Emacs keybindings
 bindkey -e
 
-# Java
-export JAVA_HOME=$(/usr/libexec/java_home)
-
 #### Prefer Homebrew ####
 PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
 export PATH=$HOME/bin:$PATH
-
-### pyenv ###
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
 
 export GOPATH="$HOME/go"
 
