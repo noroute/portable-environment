@@ -8,9 +8,6 @@ Main applications:
  * tmux
 
 Notable mentions:
- * [keysnail](https://github.com/mooz/keysnail) (Emacs for the browser)
- * [Seil](https://pqrs.org/osx/karabiner/seil.html)/[Karabiner](https://pqrs.org/osx/karabiner/index.html.en) for keyboard customization (e.g.  for slate)
- * [slate](https://github.com/jigish/slate) (do everything to windows on Mac using only a keyboard)
  * [rcm](https://github.com/thoughtbot/rcm) (dotfile management)
  * Default apps for brew/brew cask
  * osx (setup sane development defaults on OS X)
