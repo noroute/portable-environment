@@ -41,5 +41,8 @@ eval "$(pyenv init - zsh)"
 # Direnv
 eval "$(direnv hook zsh)"
 
+# Starship shell prompt customisation
+eval "$(starship init zsh)"
+
 # Finally source ohmyzsh
 source $ZSH/oh-my-zsh.sh
