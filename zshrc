@@ -22,6 +22,10 @@ PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
 export PATH=$HOME/bin:$PATH
 
+# Cargo
+export PATH=$HOME/.cargo/bin:$PATH
+
+# Go
 export GOPATH="$HOME/go"
 
 ## NVM ##
