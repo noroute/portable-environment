@@ -1,0 +1,6 @@
+# Ignore everything in ~/.claude except what's explicitly tracked
+*
+!.gitignore
+!settings.json
+!scripts/
+!scripts/**
