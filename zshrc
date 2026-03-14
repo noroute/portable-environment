@@ -38,5 +38,8 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
 
+# Direnv
+eval "$(direnv hook zsh)"
+
 # Finally source ohmyzsh
 source $ZSH/oh-my-zsh.sh
