@@ -1,14 +1,22 @@
 This set of dot- and rc files mostly defines my shell working
 environment (mostly Mac, also used on a Linux box).
 
-Main applications:
- * Spacemacs
- * zsh ([oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh))
- * git
- * tmux
+# Shell environment
+* zsh (~/.zshenv, ~/.config/zsh)
+* antidote
+* tmux
  * [starship](https://starship.rs/) for shell prompts
 
-## Setting up on a new machine
+# Main applications:
+ * Spacemacs
+
+# Notable mentions:
+ * [rcm](https://github.com/thoughtbot/rcm) (dotfile management)
+ * Default apps for brew/brew cask
+ * osx (setup sane development defaults on OS X)
+ * Emacs keybindings for most of OS X (through Library/KeyBindings)
+
+# Setting up on a new machine
 
 ```sh
 # Install rcm
@@ -29,9 +37,3 @@ rm -f ~/.claude/settings.json
 rm -rf ~/.claude/scripts
 rcup -d ~/git/portable-environment
 ```
-
-Notable mentions:
- * [rcm](https://github.com/thoughtbot/rcm) (dotfile management)
- * Default apps for brew/brew cask
- * osx (setup sane development defaults on OS X)
- * Emacs keybindings for most of OS X (through Library/KeyBindings)
