@@ -1,3 +1,7 @@
+# Keep history out of the config dir (ZDOTDIR).
+HISTFILE="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/.zsh_history"
+[[ -d ${HISTFILE:h} ]] || mkdir -p ${HISTFILE:h}
+
 # Set any zstyles you might use for configuration.
 [[ ! -f ${ZDOTDIR:-$HOME}/.zstyles ]] || source ${ZDOTDIR:-$HOME}/.zstyles
 
@@ -11,4 +15,3 @@ for _rc in ${ZDOTDIR:-$HOME}/.zshrc.d/*.zsh; do
     fi
 done
 unset _rc
-
