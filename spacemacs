@@ -32,7 +32,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(toml
      csv
      sql
      ;; ----------------------------------------------------------------
@@ -144,7 +144,7 @@ It should only modify the values of Spacemacs settings."
    ;; with `:variables' keyword (similar to layers). Check the editing styles
    ;; section of the documentation for details on available variables.
    ;; (default 'vim)
-   dotspacemacs-editing-style 'vim
+   dotspacemacs-editing-style 'hybrid
 
    ;; If non-nil show the version string in the Spacemacs buffer. It will
    ;; appear as (spacemacs version)@(emacs version)
@@ -335,6 +335,14 @@ It should only modify the values of Spacemacs settings."
    ;; displayed in the current window. (default nil)
    dotspacemacs-switch-to-buffer-prefers-purpose nil
 
+   ;; Make consecutive tab key presses after commands such as
+   ;; `spacemacs/alternate-buffer' (SPC TAB) cycle through previous
+   ;; buffers/windows/etc. Please see the option's docstring for more information.
+   ;; Set the option to t in order to enable cycling for all current and
+   ;; future cycling commands. Alternatively, choose a subset of the currently
+   ;; supported commands: '(alternate-buffer alternate-window). (default nil)
+   dotspacemacs-enable-cycling nil
+
    ;; Whether side windows (such as those created by treemacs or neotree)
    ;; are kept or minimized by `spacemacs/toggle-maximize-window' (SPC w m).
    ;; (default t)
@@ -475,7 +483,7 @@ It should only modify the values of Spacemacs settings."
    ;; The backend used for undo/redo functionality. Possible values are
    ;; `undo-redo', `undo-fu' and `undo-tree' see also `evil-undo-system'.
    ;; Note that saved undo history does not get transferred when changing
-   ;; your undo system from or to undo-tree. (default `undo-redo')"
+   ;; your undo system from or to undo-tree. (default `undo-redo')
    dotspacemacs-undo-system 'undo-redo
 
    ;; Format specification for setting the frame title.
@@ -529,78 +537,118 @@ It should only modify the values of Spacemacs settings."
    ;; Accept SPC as y for prompts if non-nil. (default nil)
    dotspacemacs-use-SPC-as-y nil
 
-                                        ; org-mode settings
-   (setq org-agenda-files '("~/org/agenda"))
-   (setq org-log-done-with-time t)
-   (setq org-refile-targets
-         (quote
-          ((nil :maxlevel . 4)
-           (org-agenda-files :maxlevel . 4))))
+   ;; If non-nil shift your number row to match the entered keyboard layout
+   ;; (only in insert state). Currently supported keyboard layouts are:
+   ;; `qwerty-us', `qwertz-de' and `querty-ca-fr'.
+   ;; New layouts can be added in `spacemacs-editing' layer.
+   ;; (default nil)
+   dotspacemacs-swap-number-row nil
 
-   (setq org-stuck-projects
-         (quote
-          ("-journal+LEVEL=2/-DONE"
-           ("TODO" "NEXT" "IN-PROGRESS")
-           nil "")))
-   (setq org-todo-keywords
-         (quote
-          ((sequence "TODO(t)" "NEXT(n)" "WAITING(w@)" "IN-PROGRESS(p)" "|" "DONE(d@)" "CANCELLED(c@)" "DELEGATED(@)" "SOMEDAY(s)"))))
+   ;; Either nil or a number of seconds. If non-nil zone out after the specified
+   ;; number of seconds. (default nil)
+   dotspacemacs-zone-out-when-idle nil
 
-   (setq org-agenda-custom-commands
-         (quote
-          (("i" "Inbox/Plan"
-            ((tags-todo "SCHEDULED=\"\"&DEADLINE=\"\""
-                        ((org-agenda-overriding-header "Unplanned")
-                         (org-tags-match-list-sublevels t)))
-             (todo "REFILE|SOMEDAY"
-                   ((org-agenda-overriding-header "Refile/Someday")
-                    (org-tags-match-list-sublevels t)
-                    (org-agenda-sorting-strategy
-                     (quote
-                      (category-keep)))))
-             (tags "IDEA"
-                   ((org-agenda-overriding-header "Ideas")
-                    (org-tags-match-list-sublevels t)))))
-           (" " "Agenda"
-            ((agenda "" nil)
-             (todo "NEXT"
-                   ((org-agenda-overriding-header "Next tasks")
-                    (org-tags-match-list-sublevels t)
-                    (org-agenda-sorting-strategy
-                     (quote
-                      (category-keep)))))
-             (todo "WAITING"
-                   ((org-agenda-overriding-header "Waiting tasks")
-                    (org-tags-match-list-sublevels t)
-                    (org-agenda-sorting-strategy
-                     (quote
-                      (category-keep))))))))))
+   ;; Run `spacemacs/prettify-org-buffer' when
+   ;; visiting README.org files of Spacemacs.
+   ;; (default nil)
+   dotspacemacs-pretty-docs nil
 
-   (setq org-capture-templates                         ; http://cachestocaches.com/2016/9/my-workflow-org-agenda/
-         (quote
-          (("t" "todo" entry (file org-default-notes-file)
-            "* TODO %?\n%u\n%a\n" :clock-in t :clock-resume t)
-           ("m" "Meeting" entry (file org-default-notes-file)
-            "* MEETING with %? :MEETING:\n%t" :clock-in t :clock-resume t)
-           ("d" "Diary" entry (file+datetree "~/org/agenda/diary.org")
-            "* %?\n%U\n" :clock-in t :clock-resume t)
-           ("i" "Idea" entry (file org-default-notes-file)
-            "* %? :IDEA:\n%t" :clock-in t :clock-resume t)
-           ("n" "Next Task" entry (file+headline org-default-notes-file "Tasks")
-            "** NEXT %? \nDEADLINE: %t"))))
-   )
+   ;; If nil the home buffer shows the full path of agenda items
+   ;; and todos. If non-nil only the file name is shown.
+   dotspacemacs-home-shorten-agenda-source nil
 
-  ;; Do not write anything past this comment. This is where Emacs will
-  ;; auto-generate custom variable definitions.
+   ;; If non-nil then byte-compile some of Spacemacs files.
+   dotspacemacs-byte-compile nil))
+
+(defun dotspacemacs/user-env ()
+  "Environment variables setup.
+This function defines the environment variables for your Emacs session. By
+default it calls `spacemacs/load-spacemacs-env' which loads the environment
+variables declared in `~/.spacemacs.env' or `~/.spacemacs.d/.spacemacs.env'.
+See the header of this file for more information."
+  (spacemacs/load-spacemacs-env)
+  )
+
+(defun dotspacemacs/user-init ()
+  "Initialization for user code:
+This function is called immediately after `dotspacemacs/init', before layer
+configuration.
+It is mostly for variables that should be set before packages are loaded.
+If you are unsure, try setting them in `dotspacemacs/user-config' first."
+  )
+
+(defun dotspacemacs/user-config ()
+  "Configuration for user code:
+This function is called at the very end of Spacemacs startup, after layer
+configuration.
+Put your configuration code here, except for variables that should be set
+before packages are loaded."
+  )
+
+
+;; Do not write anything past this comment. This is where Emacs will
+;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
   (custom-set-variables
    ;; custom-set-variables was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
-   '(js2-basic-offset 2))
+   '(package-selected-packages
+     '(ace-link aggressive-indent aidermacs all-the-icons auto-compile
+                auto-highlight-symbol auto-yasnippet avy-jump-helm-line
+                browse-at-remote centered-cursor-mode clean-aindent-mode
+                column-enforce-mode company-anaconda company-go company-shell
+                company-web csv-mode cython-mode devdocs diminish dired-quick-sort
+                disable-mouse docker dockerfile-mode dotenv-mode drag-stuff
+                dumb-jump edit-indirect ein elisp-def elisp-demos elisp-slime-nav
+                elm-mode elm-test-runner emmet-mode emr eval-sexp-fu evil-anzu
+                evil-args evil-cleverparens evil-collection evil-easymotion
+                evil-escape evil-evilified-state evil-exchange evil-goggles
+                evil-iedit-state evil-indent-plus evil-lion evil-lisp-state
+                evil-matchit evil-mc evil-nerd-commenter evil-numbers evil-org
+                evil-surround evil-textobj-line evil-tutor evil-unimpaired
+                evil-visual-mark-mode evil-visualstar expand-region eyebrowse
+                fancy-battery fish-mode flycheck-bashate flycheck-elm
+                flycheck-elsa flycheck-package flycheck-pos-tip
+                flyspell-correct-helm gh-md git-link git-messenger git-modes
+                git-timemachine gitignore-templates gnuplot go-eldoc
+                go-fill-struct go-gen-test go-guru go-impl go-rename go-tag
+                godoctor golden-ratio google-translate helm-ag helm-c-yasnippet
+                helm-comint helm-company helm-css-scss helm-descbinds helm-ls-git
+                helm-make helm-mode-manager helm-org helm-org-rifle
+                helm-projectile helm-purpose helm-pydoc helm-swoop helm-xref
+                hide-comnt highlight-indentation highlight-numbers
+                highlight-parentheses hl-todo hledger-mode holy-mode hungry-delete
+                hybrid-mode impatient-mode indent-guide info+ insert-shebang
+                inspector js-doc js2-refactor json-mode json-navigator
+                json-reformat jsonnet-mode launchctl ledger-mode link-hint
+                live-py-mode livid-mode lorem-ipsum macrostep markdown-toc
+                multi-line mwim nameless nodejs-repl npm-mode open-junk-file
+                org-cliplink org-contrib org-download org-mime org-pomodoro
+                org-present org-projectile org-rich-yank org-superstar orgit-forge
+                osx-clipboard osx-dictionary osx-trash overseer page-break-lines
+                paradox password-generator pcre2el pip-requirements pipenv pippel
+                plantuml-mode poetry popwin prettier-js protobuf-mode pug-mode
+                py-isort pydoc pyenv-mode pylookup python-pytest quickrun
+                rainbow-delimiters restart-emacs reveal-in-osx-finder sass-mode
+                scss-mode shfmt slim-mode smeargle space-doc spaceline
+                spacemacs-purpose-popwin spacemacs-whitespace-cleanup sphinx-doc
+                sql-indent string-edit-at-point string-inflection symbol-overlay
+                symon tagedit term-cursor tern tide toc-org toml-mode
+                treemacs-evil treemacs-icons-dired treemacs-magit treemacs-persp
+                treemacs-projectile typescript-mode undo-fu-session unfill uuidgen
+                vi-tilde-fringe volatile-highlights vundo web-beautify web-mode
+                wgrep winum writeroom-mode ws-butler yaml-mode yapfify
+                yasnippet-snippets)))
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
    )
+  )
