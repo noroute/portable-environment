@@ -1,22 +1,48 @@
-This set of dot- and rc files mostly defines my shell working
-environment (mostly Mac, also used on a Linux box).
+# portable-environment
 
-# Shell environment
-* zsh (~/.zshenv, ~/.config/zsh)
-* antidote
-* tmux
- * [starship](https://starship.rs/) for shell prompts
+Portable dotfile repo for macOS and Linux, managed with [rcm](https://github.com/thoughtbot/rcm).
 
-# Main applications:
- * Spacemacs
+## What's included
 
-# Notable mentions:
- * [rcm](https://github.com/thoughtbot/rcm) (dotfile management)
- * Default apps for brew/brew cask
- * osx (setup sane development defaults on OS X)
- * Emacs keybindings for most of OS X (through Library/KeyBindings)
+### Shell (zsh + antidote)
 
-# Setting up on a new machine
+[Antidote](https://getantidote.github.io/) plugin manager, with a configuration approach based on [zdotdir](https://github.com/getantidote/zdotdir). Plugins are declared in a single `.zsh_plugins.txt` file and organized by category:
+
+- **Completions** — [fzf-tab](https://github.com/Aloxaf/fzf-tab) for fuzzy Tab completion, [zsh-completions](https://github.com/zsh-users/zsh-completions) for extra definitions, [ez-compinit](https://github.com/mattmc3/ez-compinit) for fast init
+- **Editing** — sensible keybindings (Home/End/Delete just work), emacs and vi mode support
+- **History** — shared across sessions, deduplication, substring search with Up/Down
+- **Utilities** — macOS helpers (`cdf`, `flushdns`), safe `rm`/`mv`/`cp`, `extract` for any archive, git aliases (`gst`, `gco`, `gl`, `gp`, etc.)
+- **Fish-like features** — syntax highlighting, autosuggestions (right-arrow to accept), history substring search
+
+### Prompt
+
+[Starship](https://starship.rs/) cross-shell prompt.
+
+### Directory navigation
+
+[Zoxide](https://github.com/ajeetdsouza/zoxide) — `z` to jump to frecent directories.
+
+### Editors
+
+[Spacemacs](https://www.spacemacs.org/) configuration.
+
+### Terminal multiplexer
+
+tmux configuration.
+
+### Git
+
+Aliases (via oh-my-zsh git plugin), global gitignore.
+
+### macOS
+
+Emacs keybindings system-wide (`Library/KeyBindings`).
+
+### Claude Code
+
+Custom settings and cship status line (`claude/`).
+
+## Setup
 
 ```sh
 # Install rcm
@@ -29,11 +55,14 @@ git clone <repo-url> ~/git/portable-environment
 rcup -d ~/git/portable-environment
 ```
 
-For Claude Code config, remove any existing files before running `rcup` so rcm
-can place its symlinks:
+For Claude Code config, remove any existing files before running `rcup` so rcm can place its symlinks:
 
 ```sh
 rm -f ~/.claude/settings.json
 rm -rf ~/.claude/scripts
 rcup -d ~/git/portable-environment
 ```
+
+## Attribution
+
+The zsh configuration approach is inspired by [zdotdir](https://github.com/getantidote/zdotdir).
