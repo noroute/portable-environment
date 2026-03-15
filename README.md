@@ -28,7 +28,7 @@ Portable dotfile repo for macOS and Linux, managed with [rcm](https://github.com
 
 ### Terminal multiplexer
 
-tmux configuration.
+[tmux](https://github.com/tmux/tmux) configuration.
 
 ### Git
 
@@ -38,9 +38,13 @@ Aliases (via oh-my-zsh git plugin), global gitignore.
 
 Emacs keybindings system-wide (`Library/KeyBindings`).
 
+### Homebrew packages
+
+`Brewfile` tracks shell dependencies and daily-driver tools.
+
 ### Claude Code
 
-Custom settings and cship status line (`claude/`).
+Custom settings and [Starship](https://starship.rs/) integration via [cship](https://cship.dev/) (`claude/`).
 
 ## Setup
 
@@ -50,6 +54,9 @@ brew install rcm
 
 # Clone this repo
 git clone <repo-url> ~/git/portable-environment
+
+# Install Homebrew packages
+brew bundle --file=~/git/portable-environment/Brewfile
 
 # Link all dotfiles
 rcup -d ~/git/portable-environment
