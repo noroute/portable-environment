@@ -12,4 +12,3 @@ for _rc in ${ZDOTDIR:-$HOME}/.zshrc.d/*.zsh; do
 done
 unset _rc
 
-eval "$(starship init zsh)"
