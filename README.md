@@ -26,7 +26,7 @@ Portable minimal, opinionated dotfiles for Mac, managed with [rcm](https://githu
 
 ### Editors
 
-[Spacemacs](https://www.spacemacs.org/) configuration.
+[Spacemacs](https://www.spacemacs.org/) configuration. Shell aliases: `et` (terminal) and `e` (GUI Emacs.app).
 
 ### Terminal multiplexer
 
