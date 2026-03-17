@@ -1,6 +1,6 @@
 # portable-environment
 
-Portable dotfile repo for macOS and Linux, managed with [rcm](https://github.com/thoughtbot/rcm).
+Portable minimal, opinionated dotfiles for Mac, managed with [rcm](https://github.com/thoughtbot/rcm).
 
 ## What's included
 
