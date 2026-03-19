@@ -17,6 +17,8 @@ Portable minimal, opinionated dotfiles for Mac, managed with [rcm](https://githu
 ### Prompt
 
 [Starship](https://starship.rs/) cross-shell prompt.
+![Zsh starship prompt](img/zsh-starship.png)
+
 
 ### Directory navigation
 
@@ -45,6 +47,8 @@ Emacs keybindings system-wide (`Library/KeyBindings`).
 ### Claude Code
 
 Custom settings and [Starship](https://starship.rs/) integration via [cship](https://cship.dev/) (`claude/`).
+![cship starship pass-through](img/claude-cship.png)
+
 
 ## Setup
 

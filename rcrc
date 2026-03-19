@@ -1,2 +1,3 @@
 DOTFILES_DIRS="/Users/flo/git/portable-environment"
+EXCLUDES="README.md Library img"
 SYMLINK_DIRS="config/zsh"
