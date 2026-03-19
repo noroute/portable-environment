@@ -66,7 +66,6 @@ For Claude Code config, remove any existing files before running `rcup` so rcm c
 
 ```sh
 rm -f ~/.claude/settings.json
-rm -rf ~/.claude/scripts
 rcup -d ~/git/portable-environment
 ```
 
