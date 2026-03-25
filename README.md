@@ -38,7 +38,7 @@ Aliases (via oh-my-zsh git plugin), global gitignore.
 
 ### macOS
 
-Emacs keybindings system-wide (`Library/KeyBindings`).
+Emacs keybindings system-wide (`Library/KeyBindings`). `macos-defaults.sh` configures system preferences: standard function keys, fast key repeat, list-view Finder, tap-to-click, auto-hiding Dock, screen saver hot corner, and immediate lock-screen password.
 
 ### Homebrew packages
 
@@ -64,6 +64,9 @@ brew bundle --file=~/git/portable-environment/Brewfile
 
 # Link all dotfiles
 rcup -d ~/git/portable-environment
+
+# Apply macOS system preferences (keyboard, trackpad, Finder, Dock, etc.)
+bash ~/git/portable-environment/macos-defaults.sh
 ```
 
 For Claude Code config, remove any existing files before running `rcup` so rcm can place its symlinks:
