@@ -1,5 +1,5 @@
 #!/bin/bash
-# macOS system preferences
+# macOS system preferences — requires logout to take full effect.
 
 # 1. Function keys act as standard function keys (not media keys)
 defaults write -g com.apple.keyboard.fnState -bool true
@@ -14,6 +14,7 @@ defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 # 4. Trackpad: tap to click
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 
 # 5. Trackpad: two-finger tap as right click
@@ -36,3 +37,5 @@ defaults write com.apple.dock wvous-bl-modifier -int 0
 # Restart affected apps
 killall Finder 2>/dev/null
 killall Dock 2>/dev/null
+
+echo "Done. Log out and back in for all settings to take effect."
