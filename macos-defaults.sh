@@ -4,7 +4,13 @@
 # 1. Function keys act as standard function keys (not media keys)
 defaults write -g com.apple.keyboard.fnState -bool true
 
-# 2. Fast key repeat rate
+# 2. Globe key: show emoji & symbols picker
+#    GlobeKeyAction is a legacy mirror; the system reads AppleFnUsageType via TIS API
+#    Values: 0=Do Nothing, 1=Dictation, 2=Change Input Source, 3=Show Emoji & Symbols
+defaults write NSGlobalDomain GlobeKeyAction -int 3
+defaults write com.apple.HIToolbox AppleFnUsageType -int 3
+
+# 3. Fast key repeat rate
 defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 
@@ -37,5 +43,6 @@ defaults write com.apple.dock wvous-bl-modifier -int 0
 # Restart affected apps
 killall Finder 2>/dev/null
 killall Dock 2>/dev/null
+killall TextInputSwitcher 2>/dev/null  # flush globe key action cache
 
 echo "Done. Log out and back in for all settings to take effect."
