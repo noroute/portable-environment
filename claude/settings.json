@@ -1,7 +1,18 @@
 {
-  "model": "opus[1m]",
   "statusLine": {
     "type": "command",
     "command": "cship"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/notify.sh"
+          }
+        ]
+      }
+    ]
   }
 }

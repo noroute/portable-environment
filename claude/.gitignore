@@ -2,5 +2,6 @@
 *
 !.gitignore
 !settings.json
+!notify.sh
 !scripts/
 !scripts/**
