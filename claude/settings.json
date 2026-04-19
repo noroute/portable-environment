@@ -9,7 +9,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/notify.sh"
+            "command": "~/.claude/notify.sh stop"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/notify.sh permission"
           }
         ]
       }
