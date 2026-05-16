@@ -49,6 +49,8 @@ Emacs keybindings system-wide (`Library/KeyBindings`). `macos-defaults.sh` confi
 Custom settings and [Starship](https://starship.rs/) integration via [cship](https://cship.dev/) (`claude/`).
 ![cship starship pass-through](img/claude-cship.png)
 
+macOS notification hooks (`claude/notify.sh`) fire on Stop and PermissionRequest events: shows the tool name when approval is needed, detects whether the final assistant message is a question and notifies accordingly ("Question / decision needed" vs "Task complete"), and includes the tmux session/window as subtitle for context.
+
 
 ## Setup
 
