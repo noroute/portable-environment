@@ -1,6 +1,9 @@
 [include]
   path = ~/.git_userdetails	
 
+[user]
+	name = Florian Thiel
+	email = florian@upvest.co
 ##########
 # GitHub #
 ##########
@@ -115,3 +118,12 @@
   insteadOf = "gh:"
   pushInsteadOf = "github:"
   pushInsteadOf = "git://github.com/"
+
+[url "ssh://git@github.com/"]
+    insteadOf = https://github.com/
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential

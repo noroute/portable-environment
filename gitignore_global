@@ -57,3 +57,7 @@ release.properties
 # Backups
 
 *.*~
+
+**/.claude/.cc-writes/
+
+**/.claude/settings.local.json
