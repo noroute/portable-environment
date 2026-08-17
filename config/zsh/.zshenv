@@ -21,3 +21,7 @@ if [[ -f "$NVM_DIR/alias/default" ]]; then
   [[ -d "$NVM_DIR/versions/node/$_nvm_ver/bin" ]] && path=("$NVM_DIR/versions/node/$_nvm_ver/bin" $path)
   unset _nvm_ver
 fi
+
+# Add Go's GOPATH bin to PATH (where `go install` puts binaries)
+export GOPATH="${GOPATH:-$HOME/go}"
+[[ -d "$GOPATH/bin" ]] && path=($GOPATH/bin $path)
