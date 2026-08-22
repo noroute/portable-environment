@@ -15,6 +15,7 @@ cask "emacs-app"
 # === Useful tools ===
 # Not direct dependencies, but part of the daily workflow
 
+brew "age"
 brew "direnv"
 brew "ollama"
 cask "1password-cli"
