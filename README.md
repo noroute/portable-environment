@@ -40,6 +40,8 @@ Aliases (via oh-my-zsh git plugin), global gitignore.
 
 Emacs keybindings system-wide (`Library/KeyBindings`). `macos-defaults.sh` configures system preferences: standard function keys, fast key repeat, list-view Finder, tap-to-click, auto-hiding Dock, screen saver hot corner, and immediate lock-screen password.
 
+`disk-advisor` (linked to `~/.local/bin`) shows where disk space goes and suggests the five most effective cleanup actions with ready-to-run commands. At start it asks for your priorities: main goal (most space / safest / least effort), how far suggestions may go (regenerating caches → re-downloadable data → your own files), a target in GB, when something counts as unused, and which areas are off-limits. The scan runs while you answer. It covers app and package-manager caches, Homebrew, stale `node_modules`/`target`/venvs, Xcode and simulators, Docker/VMs, Ollama/LM Studio/Hugging Face models, unused apps, installers, old downloads, large files, iOS backups, media folders and deleted-user leftovers. It never deletes anything itself. Answers are remembered in `~/.local/state/disk-advisor/`; `disk-advisor --defaults` skips the questions, and `--help` lists flags for scripting. For complete numbers, give your terminal Full Disk Access, since app sandboxes in `~/Library/Containers` are otherwise unreadable.
+
 ### Homebrew packages
 
 `Brewfile` tracks shell dependencies and daily-driver tools.

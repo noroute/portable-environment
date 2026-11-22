@@ -1,0 +1,1088 @@
+#!/usr/bin/env python3
+"""disk-advisor — show where disk space goes on this Mac and suggest the top
+cleanup actions, ranked by the priorities you give at start-up.
+
+Nothing is deleted: the tool only prints suggestions (with ready-to-run
+commands). The disk scan runs in the background while you answer the
+questions, so the answers cost no extra time.
+
+Usage:
+  disk-advisor                  # interactive
+  disk-advisor --defaults       # no questions, reuse last answers (or defaults)
+  disk-advisor --goal safe --risk 1 --stale-days 60 --exclude xcode,ml
+"""
+
+from __future__ import annotations
+
+import argparse
+import calendar
+import concurrent.futures as cf
+import json
+import os
+import plistlib
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import threading
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, Optional
+
+HOME = Path.home()
+NOW = time.time()
+GB = 1024**3
+MB = 1024**2
+STATE_FILE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "disk-advisor/answers.json"
+
+# ─── terminal styling ────────────────────────────────────────────────────────
+
+COLOR = sys.stdout.isatty() and "NO_COLOR" not in os.environ
+
+
+def _c(code: str) -> Callable[[str], str]:
+    return (lambda s: f"\033[{code}m{s}\033[0m") if COLOR else (lambda s: s)
+
+
+bold, dim, red, green, yellow, cyan = _c("1"), _c("2"), _c("31"), _c("32"), _c("33"), _c("36")
+
+
+def human(n: float) -> str:
+    for unit, div in (("TB", 1024**4), ("GB", GB), ("MB", MB), ("KB", 1024)):
+        if n >= div:
+            return f"{n / div:.1f} {unit}"
+    return f"{int(n)} B"
+
+
+def tilde(p: Path | str) -> str:
+    """Display form of a path, ~ for home."""
+    s = str(p)
+    h = str(HOME)
+    return "~" + s[len(h):] if s == h or s.startswith(h + "/") else s
+
+
+def shpath(p: Path | str) -> str:
+    """Shell-safe path that still reads nicely: ~/'dir with space'/x."""
+    s = str(p)
+    h = str(HOME)
+    if s.startswith(h + "/"):
+        return "~/" + shlex.quote(s[len(h) + 1:])
+    return shlex.quote(s)
+
+
+def bar(frac: float, width: int = 24) -> str:
+    full = max(0, min(width, round(frac * width)))
+    return "█" * full + dim("░" * (width - full))
+
+
+# ─── measuring ───────────────────────────────────────────────────────────────
+
+DU_POOL = cf.ThreadPoolExecutor(max_workers=8)
+_du_cache: dict[str, int] = {}
+_du_lock = threading.Lock()
+DENIED: set[str] = set()  # paths we could not fully read (TCC / permissions)
+
+
+def run(cmd: list[str], timeout: float = 60) -> Optional[subprocess.CompletedProcess]:
+    try:
+        # stdin=DEVNULL: probes run while the user answers questions and must not eat their keystrokes
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def du(path: Path | str) -> int:
+    """Allocated bytes under path (0 if missing). Cached."""
+    key = str(path)
+    with _du_lock:
+        if key in _du_cache:
+            return _du_cache[key]
+    size = 0
+    if os.path.lexists(key):
+        r = run(["du", "-skx", key], timeout=600)
+        if r is not None:
+            if "not permitted" in r.stderr or "Permission denied" in r.stderr:
+                DENIED.add(key)
+            try:
+                size = int(r.stdout.split()[0]) * 1024
+            except (IndexError, ValueError):
+                pass
+    with _du_lock:
+        _du_cache[key] = size
+    return size
+
+
+def du_many(paths) -> list[int]:
+    return list(DU_POOL.map(du, list(paths)))
+
+
+def children(path: Path, include_hidden: bool = True) -> list[Path]:
+    try:
+        return [p for p in path.iterdir() if (include_hidden or not p.name.startswith(".")) and not p.is_symlink()]
+    except (PermissionError, FileNotFoundError, NotADirectoryError, OSError) as e:
+        if isinstance(e, PermissionError):
+            DENIED.add(str(path))
+        return []
+
+
+def age_days(ts: Optional[float]) -> Optional[float]:
+    return None if ts is None else max(0.0, (NOW - ts) / 86400)
+
+
+def mtime(p: Path) -> Optional[float]:
+    try:
+        return p.lstat().st_mtime
+    except OSError:
+        return None
+
+
+# ─── candidates ──────────────────────────────────────────────────────────────
+
+RISK = {
+    1: ("regenerates by itself", green),
+    2: ("re-downloadable", yellow),
+    3: ("your data — review first", red),
+}
+EFFORT = {1: "one command", 2: "pick from a short list", 3: "manual review"}
+
+TAGS = {
+    "dev": "Developer build output, package caches & runtimes",
+    "xcode": "Xcode & simulators",
+    "containers": "Docker & virtual machines",
+    "ml": "AI/ML models",
+    "apps": "Applications",
+    "personal": "Downloads, installers & large personal files",
+    "media": "Photos & Messages",
+    "backups": "iOS device backups",
+    "trash": "Trash",
+}
+
+HAS_TRASH = bool(shutil.which("trash"))  # /usr/bin/trash ships with macOS 15+
+
+
+@dataclass
+class Entry:
+    label: str
+    size: int
+    path: Optional[Path] = None
+    age: Optional[float] = None  # days since last use/modification
+    cmd: Optional[str] = None  # overrides the candidate's default per-entry command
+
+
+@dataclass
+class Candidate:
+    key: str
+    title: str
+    tag: str
+    risk: int
+    effort: int
+    why: str
+    entries: list[Entry] = field(default_factory=list)
+    age_filter: bool = False  # only count entries unused for >= stale-days
+    min_entry: int = 20 * MB  # ignore entries smaller than this
+    upper_bound: bool = False  # size is an "up to" estimate
+    per_entry: Optional[Callable[[Entry], str]] = None  # default command for an entry
+    commands: list[str] = field(default_factory=list)  # fixed commands (instead of per-entry)
+    steps: str = ""  # manual instructions
+    note: str = ""
+    # filled by finalize()
+    kept: list[Entry] = field(default_factory=list)
+    size: int = 0
+    score: float = 0.0
+
+    def finalize(self, stale_days: int) -> None:
+        kept = [e for e in self.entries if e.size >= self.min_entry or (e.size == 0 and self.commands)]
+        if self.age_filter:  # unknown age counts as "in use" — never suggest on a guess
+            kept = [e for e in kept if e.age is not None and e.age >= stale_days]
+        self.kept = sorted(kept, key=lambda e: e.size, reverse=True)
+        self.size = sum(e.size for e in self.kept)
+
+    def actions(self, limit: int = 6) -> tuple[list[tuple[str, int]], int]:
+        """(command, bytes it frees) pairs; bytes is 0 for whole-candidate commands."""
+        if self.commands:
+            return [(c, 0) for c in self.commands], 0
+        cmds = []
+        for e in self.kept:
+            if e.cmd:
+                cmds.append((e.cmd, e.size))
+            elif self.per_entry and e.path:
+                cmds.append((self.per_entry(e), e.size))
+        return cmds[:limit], max(0, len(cmds) - limit)
+
+
+def rm_rf(e: Entry) -> str:
+    return f"rm -rf {shpath(e.path)}"
+
+
+def trash_cmd(p: Path) -> str:
+    return f"trash {shpath(p)}" if HAS_TRASH else f"mv {shpath(p)} ~/.Trash/"
+
+
+def to_trash(e: Entry) -> str:
+    return trash_cmd(e.path)
+
+
+def entries_for(paths: list[Path], label: Callable[[Path], str] = tilde, with_age: bool = False) -> list[Entry]:
+    sizes = du_many(paths)
+    return [
+        Entry(label(p), s, p, age_days(mtime(p)) if with_age else None)
+        for p, s in zip(paths, sizes)
+        if s
+    ]
+
+
+# Package-manager caches get their own candidate with proper clean commands;
+# the generic cache sweep skips these names.
+PKG_CACHES = [
+    (HOME / ".npm/_cacache", "npm cache clean --force"),
+    (HOME / "Library/Caches/Yarn", "yarn cache clean"),
+    (HOME / "Library/pnpm/store", "pnpm store prune"),
+    (HOME / "Library/Caches/pip", "python3 -m pip cache purge"),
+    (HOME / ".cache/uv", "uv cache clean"),
+    (HOME / "Library/Caches/go-build", "go clean -cache"),
+    (HOME / "go/pkg/mod", "go clean -modcache"),
+    (HOME / ".cargo/registry", "rm -rf ~/.cargo/registry/cache ~/.cargo/registry/src"),
+    (HOME / ".gradle/caches", "rm -rf ~/.gradle/caches"),
+    (HOME / ".m2/repository", "rm -rf ~/.m2/repository"),
+    (HOME / ".bun/install/cache", "bun pm cache rm"),
+    (HOME / "Library/Caches/CocoaPods", "pod cache clean --all"),
+    (HOME / "Library/Caches/ms-playwright", "rm -rf ~/Library/Caches/ms-playwright"),
+]
+CACHE_SKIP = {p.name for p, _ in PKG_CACHES if p.parent.name in ("Caches", ".cache")} | {
+    "Homebrew",  # brew cleanup
+    "huggingface",  # ML models
+    "lm-studio",
+}
+
+
+def c_user_caches() -> Candidate:
+    paths = [p for p in children(HOME / "Library/Caches") if p.name not in CACHE_SKIP and not p.name.startswith("com.apple.")]
+    paths += [p for p in children(HOME / ".cache") if p.name not in CACHE_SKIP]
+    mail = HOME / "Library/Containers/com.apple.mail/Data/Library/Mail Downloads"
+    entries = entries_for(paths)
+    if os.path.isdir(mail):
+        entries += [Entry("Mail attachment downloads", du(mail), mail)]
+    return Candidate(
+        "caches", "Application caches", "caches", 1, 1,
+        "Apps rebuild caches on demand; quit the app first so it doesn't hold them open.",
+        entries, min_entry=100 * MB, per_entry=rm_rf,
+    )
+
+
+def c_homebrew() -> Optional[Candidate]:
+    if not shutil.which("brew"):
+        return None
+    size = 0
+    r = run(["brew", "cleanup", "-n", "--prune=all"], timeout=120)
+    if r:
+        m = re.search(r"approximately ([\d.]+)\s*([KMGT]?B)", r.stdout + r.stderr)
+        if m:
+            size = int(float(m.group(1)) * {"B": 1, "KB": 1024, "MB": MB, "GB": GB, "TB": 1024**4}[m.group(2)])
+    if not size:
+        r = run(["brew", "--cache"])
+        if r and r.stdout.strip():
+            size = du(r.stdout.strip())
+    return Candidate(
+        "homebrew", "Homebrew downloads & old versions", "dev", 1, 1,
+        "Downloaded bottles and superseded versions; installed formulae are untouched.",
+        [Entry("brew cleanup", size)], commands=["brew cleanup --prune=all", "brew autoremove"],
+    )
+
+
+def c_pkg_caches() -> Candidate:
+    present = [(p, cmd) for p, cmd in PKG_CACHES if p.exists()]
+    sizes = du_many(p for p, _ in present)
+    return Candidate(
+        "pkgcaches", "Package-manager caches", "dev", 1, 1,
+        "Download caches; packages are fetched again on the next install.",
+        [Entry(tilde(p), s, p, cmd=cmd) for (p, cmd), s in zip(present, sizes)],
+        min_entry=50 * MB,
+    )
+
+
+ARTIFACTS = {  # dir name -> marker file that must exist next to it (or inside for venvs)
+    "node_modules": "package.json",
+    ".next": "package.json",
+    "target": "Cargo.toml",
+    ".venv": "pyvenv.cfg",
+    "venv": "pyvenv.cfg",
+    ".tox": "tox.ini",
+    ".terraform": None,
+    ".gradle": None,
+}
+WALK_SKIP_SUFFIX = (".app", ".photoslibrary", ".musiclibrary", ".tvlibrary", ".bundle", ".framework",
+                    ".xcarchive", ".pvm", ".vmwarevm", ".utm", ".sparsebundle")
+WALK_SKIP_TOP = {"Library", "Applications", "Pictures", "Music", "Movies", ".Trash"}
+
+
+def c_build_artifacts() -> Candidate:
+    found: list[tuple[Path, Optional[float]]] = []
+    base_depth = len(HOME.parts)
+    for root, dirs, files in os.walk(HOME, onerror=None):
+        rp = Path(root)
+        depth = len(rp.parts) - base_depth
+        keep = []
+        for d in dirs:
+            p = rp / d
+            if d in ARTIFACTS and depth > 0:
+                marker = ARTIFACTS[d]
+                ok = marker is None or (marker == "pyvenv.cfg" and (p / marker).exists()) or marker in files
+                if ok and not p.is_symlink():
+                    # project activity = newest mtime among the project's own top-level entries
+                    sibs = [rp / n for n in dirs + files if n not in ARTIFACTS]
+                    ts = [t for t in map(mtime, sibs) if t] or [mtime(rp) or NOW]
+                    found.append((p, max(ts)))
+                continue
+            if depth == 0 and d in WALK_SKIP_TOP:
+                continue
+            if d.startswith(".") or d.endswith(WALK_SKIP_SUFFIX) or (rp / d).is_symlink():
+                continue
+            keep.append(d)
+        dirs[:] = keep if depth < 7 else []
+    sizes = du_many(p for p, _ in found)
+    entries = [
+        Entry(f"{tilde(p.parent)} → {p.name}", s, p, age_days(ts))
+        for (p, ts), s in zip(found, sizes)
+    ]
+    return Candidate(
+        "artifacts", "Build output in inactive projects", "dev", 1, 1,
+        "node_modules, Rust target/, Python venvs… — rebuilt by the next install/build.",
+        entries, age_filter=True, min_entry=50 * MB, per_entry=rm_rf,
+    )
+
+
+def _active_version(cmd: list[str], pattern: str) -> Optional[str]:
+    r = run(cmd, timeout=10)
+    if r and r.returncode == 0:
+        m = re.search(pattern, r.stdout)
+        return m.group(1) if m else None
+    return None
+
+
+def c_runtimes() -> Candidate:
+    entries: list[Entry] = []
+    specs = [
+        (HOME / ".nvm/versions/node", ["node", "--version"], r"(v[\d.]+)", lambda v: f"nvm uninstall {v}", "Node"),
+        (HOME / ".rustup/toolchains", ["rustup", "default"], r"^(\S+)", lambda v: f"rustup toolchain uninstall {v}", "Rust"),
+        (HOME / ".pyenv/versions", ["pyenv", "global"], r"^(\S+)", lambda v: f"pyenv uninstall -f {v}", "Python"),
+    ]
+    for base, active_cmd, pat, mkcmd, lang in specs:
+        versions = children(base, include_hidden=False)
+        if len(versions) < 2:
+            continue
+        active = _active_version(active_cmd, pat)
+        others = [v for v in versions if v.name != active]
+        for v, s in zip(others, du_many(others)):
+            entries.append(Entry(f"{lang} {v.name}", s, v, cmd=mkcmd(v.name)))
+    return Candidate(
+        "runtimes", "Unused language runtime versions", "dev", 2, 2,
+        "Installed side by side; keep the ones your projects pin, reinstall others on demand.",
+        entries, min_entry=50 * MB,
+    )
+
+
+def c_xcode() -> list[Candidate]:
+    dev = HOME / "Library/Developer"
+    build = [dev / "Xcode/DerivedData"] + [p for p in children(dev / "Xcode") if p.name.endswith("DeviceSupport")]
+    sims = [dev / "CoreSimulator/Devices", dev / "CoreSimulator/Caches", Path("/Library/Developer/CoreSimulator/Images")]
+    archives = [p for p in children(dev / "Xcode/Archives")]
+    return [
+        Candidate(
+            "xcode-build", "Xcode DerivedData & device support", "xcode", 1, 1,
+            "Build intermediates and debug symbols, recreated on the next build / device connect.",
+            entries_for([p for p in build if p.exists()]), per_entry=rm_rf,
+        ),
+        Candidate(
+            "simulators", "iOS simulators & runtimes", "xcode", 2, 1,
+            "Simulator devices and runtimes; Xcode downloads runtimes again when needed.",
+            entries_for([p for p in sims if p.exists()]),
+            commands=["xcrun simctl delete unavailable", "xcrun simctl runtime list   # then: xcrun simctl runtime delete <id>"],
+        ),
+        Candidate(
+            "xcode-archives", "Old Xcode archives", "xcode", 3, 2,
+            "Archived builds; keep the ones whose dSYMs you need for crash symbolication.",
+            entries_for(archives, with_age=True), age_filter=True, per_entry=to_trash,
+        ),
+    ]
+
+
+def c_containers() -> list[Candidate]:
+    docker_paths = [
+        HOME / "Library/Containers/com.docker.docker",
+        HOME / "Library/Group Containers/HUAQ24HBR6.dev.orbstack",
+        HOME / ".orbstack",
+        HOME / ".colima",
+    ]
+    vm_paths = [
+        HOME / "Parallels",
+        HOME / "Virtual Machines.localized",
+        HOME / "Library/Containers/com.utmapp.UTM/Data/Documents",
+        HOME / ".lima",
+        HOME / ".tart",
+    ]
+    docker = Candidate(
+        "docker", "Docker images, containers & build cache", "containers", 2, 1,
+        "Unused images and build cache are pulled/rebuilt when needed. Volumes are kept.",
+        entries_for([p for p in docker_paths if p.exists()]),
+        commands=["docker system df", "docker system prune -a"],
+        upper_bound=True, note="Size is the whole engine disk; prune frees the unused part.",
+    )
+    reclaimable = _docker_reclaimable()
+    if reclaimable is not None:  # engine running: exact figure instead of an upper bound
+        docker.entries = [Entry("reclaimable per `docker system df`", reclaimable)]
+        docker.upper_bound, docker.note = False, ""
+    return [
+        docker,
+        Candidate(
+            "vms", "Virtual machines", "containers", 3, 2,
+            "Whole guest disks — usually the biggest single files on a Mac.",
+            entries_for([p for p in vm_paths if p.exists()]),
+            steps="Delete unused VMs from within their app (Parallels/UTM/VMware) so its config stays consistent.",
+        ),
+    ]
+
+
+def _docker_reclaimable() -> Optional[int]:
+    if not shutil.which("docker"):
+        return None
+    r = run(["docker", "system", "df", "--format", "{{.Type}}\t{{.Reclaimable}}"], timeout=15)
+    if not r or r.returncode != 0:
+        return None
+    units = {"B": 1, "kB": 1000, "KB": 1000, "MB": 1000**2, "GB": 1000**3, "TB": 1000**4}
+    total = 0
+    for line in r.stdout.splitlines():
+        m = re.search(r"\t([\d.]+)\s*([kKMGT]?B)", line)
+        if m and not line.startswith("Local Volumes"):  # prune without --volumes keeps volumes
+            total += int(float(m.group(1)) * units[m.group(2)])
+    return total
+
+
+def c_ollama() -> Optional[Candidate]:
+    models = HOME / ".ollama/models"
+    if not models.exists():
+        return None
+    total = du(models)
+    entries: list[Entry] = []
+    r = run(["ollama", "list"], timeout=10)
+    if r and r.returncode == 0:
+        units = {"KB": 1024, "MB": MB, "GB": GB, "TB": 1024**4}
+        for line in r.stdout.splitlines()[1:]:
+            m = re.match(r"(\S+)\s+\S+\s+([\d.]+)\s*([KMGT]B)", line)
+            if m:
+                entries.append(Entry(m.group(1), int(float(m.group(2)) * units[m.group(3)]), cmd=f"ollama rm {m.group(1)}"))
+    if not entries:  # server not running: names from manifests, sizes from blobs they reference
+        for manifest in (models / "manifests").glob("*/*/*/*"):
+            name = f"{manifest.parent.name}:{manifest.name}"
+            if manifest.parent.parent.name != "library":
+                name = f"{manifest.parent.parent.name}/{name}"
+            try:
+                layers = json.loads(manifest.read_text()).get("layers", [])
+                size = sum(int(l.get("size", 0)) for l in layers)
+            except (OSError, ValueError):
+                size = 0
+            entries.append(Entry(name, size, manifest, age_days(mtime(manifest)), cmd=f"ollama rm {name}"))
+    if not entries and total:
+        entries = [Entry("ollama models", total)]
+    return Candidate(
+        "ollama", "Ollama models", "ml", 2, 2,
+        "Models you don't use anymore; `ollama pull` brings any of them back.",
+        entries, min_entry=100 * MB,
+        note="" if r and r.returncode == 0 else "Sizes from manifests; `ollama rm` needs the server (`ollama serve`).",
+    )
+
+
+def c_ml_caches() -> Candidate:
+    hf = HOME / ".cache/huggingface/hub"
+    paths = [p for p in children(hf) if p.name.startswith(("models--", "datasets--"))]
+    for base in (HOME / ".lmstudio/models", HOME / ".cache/lm-studio/models"):
+        paths += [p2 for p in children(base) for p2 in children(p)]  # publisher/model
+    entries = entries_for(paths, label=lambda p: p.name.replace("models--", "").replace("--", "/"), with_age=True)
+    return Candidate(
+        "mlcaches", "Hugging Face / LM Studio models", "ml", 2, 2,
+        "Downloaded model weights; they're fetched again on first use.",
+        entries, age_filter=True, min_entry=100 * MB, per_entry=rm_rf,
+    )
+
+
+def c_trash() -> Optional[Candidate]:
+    t = HOME / ".Trash"
+    size = du(t)
+    if str(t) in DENIED and not size:
+        return None
+    return Candidate(
+        "trash", "Empty the Trash", "trash", 2, 1,
+        "Already deleted by you, still taking space until emptied.",
+        [Entry("~/.Trash", size, t)],
+        commands=["osascript -e 'tell application \"Finder\" to empty trash'"],
+    )
+
+
+def _mdfind(query: str) -> list[Path]:
+    r = run(["mdfind", "-onlyin", str(HOME), query], timeout=60)
+    return [Path(l) for l in r.stdout.splitlines() if l] if r and r.returncode == 0 else []
+
+
+INSTALLER_EXT = (".dmg", ".pkg", ".iso", ".xip", ".ipsw")
+
+
+def _in_bundle(p: Path) -> bool:
+    return any(part.endswith((".app", ".photoslibrary", ".bundle", ".pvm", ".utm")) for part in p.parts[:-1])
+
+
+def c_installers() -> Candidate:
+    q = " || ".join(f'kMDItemFSName == "*{ext}"c' for ext in INSTALLER_EXT)
+    paths = [
+        p for p in _mdfind(q)
+        if not _in_bundle(p) and not str(p).startswith(str(HOME / "Library")) and p.suffix.lower() in INSTALLER_EXT
+    ]
+    return Candidate(
+        "installers", "Installer images (.dmg, .pkg, .iso…)", "personal", 2, 1,
+        "Once the app is installed, the installer is dead weight; vendors keep them downloadable.",
+        entries_for(paths, with_age=True), min_entry=50 * MB, per_entry=to_trash,
+    )
+
+
+def c_downloads() -> Candidate:
+    paths = [p for p in children(HOME / "Downloads", include_hidden=False) if p.suffix.lower() not in INSTALLER_EXT]
+    return Candidate(
+        "downloads", "Old items in Downloads", "personal", 3, 3,
+        "Things downloaded long ago and not touched since.",
+        entries_for(paths, with_age=True), age_filter=True, min_entry=50 * MB, per_entry=to_trash,
+        note="Moved to Trash, so still recoverable until you empty it.",
+    )
+
+
+def c_large_files(claimed: list[str]) -> Candidate:
+    paths = _mdfind("kMDItemFSSize > 1073741824")
+    skip = tuple(claimed) + (str(HOME / "Downloads"), str(HOME / "Library/Caches"), str(HOME / ".Trash"))
+    keep = [p for p in paths if not str(p).startswith(skip) and not _in_bundle(p) and p.suffix.lower() not in INSTALLER_EXT]
+    entries = []
+    for p in keep:
+        try:
+            st = p.stat()
+        except OSError:
+            continue
+        size = du(p) if p.is_dir() else st.st_blocks * 512  # bundles (VM images etc.) are directories
+        entries.append(Entry(tilde(p), size, p, age_days(st.st_mtime)))
+    return Candidate(
+        "largefiles", "Large files you haven't touched in a while", "personal", 3, 3,
+        "Files over 1 GB found by Spotlight, outside the areas covered above.",
+        entries, age_filter=True, per_entry=to_trash,
+        note="Moved to Trash, so still recoverable until you empty it.",
+    )
+
+
+def _cask_tokens() -> dict[str, str]:
+    """App bundle name -> Homebrew cask token, for casks that installed an app."""
+    if not shutil.which("brew"):
+        return {}
+    r = run(["brew", "info", "--installed", "--cask", "--json=v2"], timeout=60)
+    out: dict[str, str] = {}
+    try:
+        for cask in json.loads(r.stdout).get("casks", []) if r else []:
+            for art in cask.get("artifacts", []):
+                for app in (art.get("app") or []) if isinstance(art, dict) else []:
+                    if isinstance(app, str):
+                        out[Path(app).name] = cask["token"]
+    except ValueError:
+        pass
+    return out
+
+
+def _app_info(app: Path) -> tuple[Optional[str], Optional[float]]:
+    r = run(["mdls", "-name", "kMDItemCFBundleIdentifier", "-name", "kMDItemLastUsedDate",
+             "-name", "kMDItemDateAdded", str(app)], timeout=10)
+    if not r:
+        return None, None
+    vals = dict(re.findall(r'^(\w+)\s*=\s*"?(.*?)"?$', r.stdout, re.M))
+    ts = None
+    for key in ("kMDItemLastUsedDate", "kMDItemDateAdded"):  # never opened → age since install
+        v = vals.get(key, "(null)")
+        if v != "(null)":
+            try:
+                ts = calendar.timegm(time.strptime(v[:19], "%Y-%m-%d %H:%M:%S"))  # mdls prints UTC
+                break
+            except ValueError:
+                pass
+    bid = vals.get("kMDItemCFBundleIdentifier")
+    return (None if bid == "(null)" else bid), ts
+
+
+def c_apps() -> Candidate:
+    apps = [p for d in (Path("/Applications"), HOME / "Applications") for p in children(d) if p.suffix == ".app"]
+    infos = list(DU_POOL.map(_app_info, apps))
+    pairs = [(a, ts) for a, (bid, ts) in zip(apps, infos) if not (bid or "").startswith("com.apple.")]
+    sizes = du_many(a for a, _ in pairs)
+    casks = _cask_tokens()
+    entries = []
+    for (a, ts), s in zip(pairs, sizes):
+        tok = casks.get(a.name)
+        cmd = f"brew uninstall --cask {tok}" if tok else trash_cmd(a)
+        age = age_days(ts)
+        label = a.stem + (dim(f"  (last used {int(age)}d ago)") if age is not None else dim("  (never opened)"))
+        entries.append(Entry(label, s, a, age, cmd=cmd))
+    return Candidate(
+        "apps", "Applications you haven't opened in a while", "apps", 2, 2,
+        "Last-used dates come from Spotlight; reinstall from the vendor / App Store if needed.",
+        entries, age_filter=True, min_entry=100 * MB,
+    )
+
+
+def c_ios_backups() -> Candidate:
+    base = HOME / "Library/Application Support/MobileSync/Backup"
+    paths = children(base, include_hidden=False)
+
+    def label(p: Path) -> str:
+        try:
+            with open(p / "Info.plist", "rb") as f:
+                info = plistlib.load(f)
+            return f"{info.get('Device Name', p.name)} ({info.get('Product Type', '?')})"
+        except (OSError, plistlib.InvalidFileException, ValueError):
+            return p.name[:12]
+
+    entries = entries_for(paths, label=label, with_age=True)
+    for e in entries:
+        if e.age is not None:
+            e.label += dim(f"  last backup {int(e.age)}d ago")
+    return Candidate(
+        "iosbackups", "iPhone / iPad backups", "backups", 3, 2,
+        "Local device backups; old devices or ones also backed up to iCloud are candidates.",
+        entries, steps="Finder → select the device → Manage Backups… → delete the ones you don't need.",
+    )
+
+
+def c_media() -> list[Candidate]:
+    libs = [p for p in children(HOME / "Pictures", include_hidden=False) if p.suffix == ".photoslibrary"]
+    msgs = HOME / "Library/Messages/Attachments"
+    return [
+        Candidate(
+            "photos", "Photos library (full-resolution originals)", "media", 3, 2,
+            "With iCloud Photos, macOS can keep small previews locally and originals in iCloud.",
+            entries_for(libs), upper_bound=True,
+            steps="Only if iCloud Photos is on: Photos → Settings → iCloud → “Optimize Mac Storage”.",
+        ),
+        Candidate(
+            "messages", "Messages attachments", "media", 3, 2,
+            "Photos/videos received in Messages, kept forever by default.",
+            entries_for([msgs] if msgs.exists() else []), upper_bound=True,
+            steps="Messages → Settings → General → Keep messages: 1 Year, or review big attachments in "
+                  "System Settings → General → Storage → Messages.",
+        ),
+    ]
+
+
+def c_deleted_users() -> Candidate:
+    base = Path("/Users/Deleted Users")
+    return Candidate(
+        "deletedusers", "Leftovers of deleted user accounts", "backups", 3, 1,
+        "Home folders macOS kept when an account was removed — check nothing in there is still needed.",
+        entries_for([p for p in children(base, include_hidden=False)]),
+        per_entry=to_trash, note="Moved to Trash, so still recoverable until you empty it.",
+    )
+
+
+def c_media_folders() -> Candidate:
+    paths = [p for base in (HOME / "Music", HOME / "Movies", Path("/Users/Shared"))
+             for p in children(base, include_hidden=False)]
+    return Candidate(
+        "mediafolders", "Big media folders you could move to an external drive", "media", 3, 3,
+        "Music/video collections are often the bulkiest personal data and rarely need to be on the internal disk.",
+        entries_for(paths), min_entry=GB,
+        steps="Copy to an external drive or NAS, verify the copy, then delete the original. "
+              "For a Music/TV library, move it from within the app (Settings → Files) so it keeps working.",
+    )
+
+
+def collect_all() -> list[Candidate]:
+    simple = [c_user_caches, c_homebrew, c_pkg_caches, c_build_artifacts, c_runtimes, c_xcode, c_containers,
+              c_ollama, c_ml_caches, c_trash, c_installers, c_downloads, c_apps, c_ios_backups, c_media,
+              c_deleted_users, c_media_folders]
+    out: list[Candidate] = []
+    with cf.ThreadPoolExecutor(max_workers=len(simple)) as pool:
+        for res in pool.map(lambda f: _safe(f), simple):
+            out += res if isinstance(res, list) else ([res] if res else [])
+    claimed = [str(e.path) for c in out for e in c.entries if e.path]
+    claimed += [str(HOME / ".ollama"), str(HOME / ".cache"), str(HOME / "Library/Developer")]
+    lf = _safe(lambda: c_large_files(claimed))
+    if lf:
+        out.append(lf)
+    return out
+
+
+SCAN_ERRORS: list[str] = []
+
+
+def _safe(f):
+    try:
+        return f()
+    except Exception as e:  # one broken probe must not sink the whole report
+        SCAN_ERRORS.append(f"{getattr(f, '__name__', 'probe')}: {e}")
+        return None
+
+
+# ─── overview ────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class Overview:
+    total: int
+    used: int
+    free: int
+    important_free: Optional[int]
+    snapshots: int
+    rows: list[tuple[str, int, list[tuple[str, int]]]]  # label, size, sub-rows
+
+
+def _important_free() -> Optional[int]:
+    """Free space incl. purgeable, as Finder reports it."""
+    js = ("ObjC.import('Foundation');"
+          "var u=$.NSURL.fileURLWithPath('/');"
+          "var d=u.resourceValuesForKeysError(['NSURLVolumeAvailableCapacityForImportantUsageKey'],null);"
+          "d.objectForKey('NSURLVolumeAvailableCapacityForImportantUsageKey').js")
+    r = run(["osascript", "-l", "JavaScript", "-e", js], timeout=10)
+    try:
+        return int(float(r.stdout.strip())) if r and r.returncode == 0 else None
+    except ValueError:
+        return None
+
+
+def build_overview() -> Overview:
+    vol = "/System/Volumes/Data" if os.path.isdir("/System/Volumes/Data") else "/"
+    total, _, free = shutil.disk_usage(vol)
+    r = run(["tmutil", "listlocalsnapshots", "/"], timeout=10)
+    snaps = sum(1 for l in r.stdout.splitlines() if "com.apple" in l) if r else 0
+
+    home_items = children(HOME)
+    lib_items = [p for p in home_items if p.name == "Library"]
+    home_items = [p for p in home_items if p.name != "Library"]
+    lib_children = children(HOME / "Library") if lib_items else []
+    others = [p for p in children(Path("/Users"), include_hidden=False) if p != HOME]  # Shared, Deleted Users, other people
+    extra = [p for p in (Path("/Applications"), Path("/opt/homebrew"), Path("/Library"), Path("/private/var"))
+             if p.exists()] + others
+
+    sizes = dict(zip(map(str, home_items + lib_children + extra), du_many(home_items + lib_children + extra)))
+    rows: list[tuple[str, int, list[tuple[str, int]]]] = []
+    for p in home_items:
+        if sizes[str(p)] >= 200 * MB:
+            rows.append((tilde(p), sizes[str(p)], []))
+    if lib_items:
+        lib_sizes = sorted(((p.name, sizes[str(p)]) for p in lib_children), key=lambda x: -x[1])
+        rows.append(("~/Library", sum(s for _, s in lib_sizes), [x for x in lib_sizes[:4] if x[1] >= 500 * MB]))
+    for p in extra:
+        if sizes[str(p)] >= 200 * MB:
+            rows.append((str(p), sizes[str(p)], []))
+    rows.sort(key=lambda r: -r[1])
+    return Overview(total, total - free, free, _important_free(), snaps, rows)
+
+
+def print_overview(ov: Overview) -> None:
+    print(bold("\nDisk"))
+    frac = ov.used / ov.total if ov.total else 0
+    colour = red if frac > 0.9 else yellow if frac > 0.75 else green
+    print(f"  {bar(frac, 40)}  {colour(f'{frac:.0%} used')}")
+    print(f"  {human(ov.used)} used of {human(ov.total)} · {bold(human(ov.free))} free", end="")
+    if ov.important_free and ov.important_free > ov.free + 512 * MB:
+        print(dim(f" (≈{human(ov.important_free)} incl. purgeable space macOS frees on demand)"), end="")
+    print()
+    if ov.snapshots:
+        print(dim(f"  {ov.snapshots} local Time Machine snapshot(s) — macOS thins these automatically when space runs low."))
+
+    print(bold("\nWhere it goes"))
+    measured = sum(s for _, s, _ in ov.rows)
+    top = max((s for _, s, _ in ov.rows), default=1)
+    for label, size, subs in ov.rows[:12]:
+        print(f"  {label[:30]:<30} {human(size):>9}  {bar(size / top)}")
+        for name, s in subs:
+            print(dim(f"    {name[:28]:<28} {human(s):>9}"))
+    rest = ov.used - measured
+    if rest > 0:
+        print(dim(f"  {'not measured':<30} {human(rest):>9}  macOS system, snapshots, unreadable folders"))
+    unreadable = denied_areas()
+    if rest > 20 * GB and unreadable:
+        print(yellow(f"  ! {human(rest)} couldn't be attributed. Likely much of it is in folders this terminal may not read:"))
+        print(yellow(f"    {', '.join(unreadable[:5])}"))
+        print(yellow("    Grant your terminal app Full Disk Access (System Settings → Privacy & Security) and re-run."))
+
+
+def denied_areas() -> list[str]:
+    """Unreadable locations collapsed to readable areas (~/Library/Containers rather than 300 app ids)."""
+    areas = set()
+    lib = str(HOME / "Library")
+    for d in DENIED:
+        if d.startswith(lib + "/"):
+            d = "/".join(d.split("/")[: len(Path(lib).parts) + 1])
+        areas.add(d)
+    areas = {a for a in areas if not any(a.startswith(b + "/") for b in areas)}  # drop nested ones
+    # app sandboxes first: they're where most unreadable bulk lives
+    order = lambda a: (0 if "Containers" in a else 1 if a.startswith(str(HOME)) else 2, a)
+    return [tilde(a) for a in sorted(areas, key=order)]
+
+
+# ─── priorities ──────────────────────────────────────────────────────────────
+
+GOALS = {
+    "space": ("Free as much space as possible", (0.3, 0.3)),
+    "safe": ("Stay safe — prefer data that regenerates by itself", (1.6, 0.5)),
+    "effort": ("Least effort — prefer one-command fixes", (0.5, 1.6)),
+}
+RISK_CHOICES = {
+    1: "Only things that regenerate automatically (caches, build output)",
+    2: "…plus things I can re-download (models, images, apps, installers)",
+    3: "…plus my own files, after I review them",
+}
+DEFAULTS = {"goal": "space", "risk": 2, "target_gb": None, "stale_days": 90, "exclude": []}
+
+
+def load_answers() -> dict:
+    try:
+        return {**DEFAULTS, **json.loads(STATE_FILE.read_text())}
+    except (OSError, ValueError):
+        return dict(DEFAULTS)
+
+
+def save_answers(a: dict) -> None:
+    try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(json.dumps(a, indent=2))
+    except OSError:
+        pass
+
+
+def ask(prompt: str, default: str) -> str:
+    try:
+        v = input(f"   {cyan('›')} {prompt} {dim(f'[{default}]') if default else ''} ").strip()
+    except EOFError:
+        v = ""
+    return v or default
+
+
+def choose(title: str, options: list[tuple[str, str]], default_key: str) -> str:
+    print(bold(title))
+    keys = [k for k, _ in options]
+    for i, (_, text) in enumerate(options, 1):
+        print(f"   {i}. {text}")
+    while True:
+        v = ask("", str(keys.index(default_key) + 1))
+        if v.isdigit() and 1 <= int(v) <= len(keys):
+            return keys[int(v) - 1]
+        print(red("     Please enter one of the numbers above."))
+
+
+def prompt_answers(a: dict, fixed: set[str]) -> dict:
+    print(bold("\ndisk-advisor") + dim(" — a few questions so the suggestions fit you. Enter keeps [the default].\n"))
+    print(dim("   (Scanning the disk in the background meanwhile.)\n"))
+    if "goal" not in fixed:
+        a["goal"] = choose("1) What's your main goal?", [(k, v[0]) for k, v in GOALS.items()], a["goal"])
+    if "risk" not in fixed:
+        a["risk"] = int(choose("2) How far may suggestions go?", [(str(k), v) for k, v in RISK_CHOICES.items()], str(a["risk"])))
+    if "target_gb" not in fixed:
+        print(bold("3) How much space do you want to free? (GB, '-' for no target)"))
+        while True:
+            v = ask("", str(a["target_gb"]) if a["target_gb"] else "-")
+            if v in ("-", "0", ""):
+                a["target_gb"] = None
+                break
+            try:
+                a["target_gb"] = float(v)
+                break
+            except ValueError:
+                print(red("     A number, please (e.g. 20)."))
+    if "stale_days" not in fixed:
+        print(bold("4) Treat things as unused after how many days?"))
+        while True:
+            v = ask("", str(a["stale_days"]))
+            if v.isdigit():
+                a["stale_days"] = int(v)
+                break
+            print(red("     Whole days, please (e.g. 90)."))
+    if "exclude" not in fixed:
+        print(bold("5) Anything off-limits? (numbers, comma-separated; '-' for none)"))
+        keys = list(TAGS)
+        for i, k in enumerate(keys, 1):
+            print(f"   {i}. {TAGS[k]}")
+        default = ",".join(str(keys.index(k) + 1) for k in a["exclude"] if k in keys) or "-"
+        while True:
+            v = ask("", default)
+            if v in ("-", ""):
+                a["exclude"] = []
+                break
+            try:
+                idx = [int(x) for x in re.split(r"[,\s]+", v) if x]
+                a["exclude"] = [keys[i - 1] for i in idx if 1 <= i <= len(keys)]
+                break
+            except (ValueError, IndexError):
+                print(red("     e.g. 2,4"))
+    return a
+
+
+# ─── ranking & report ────────────────────────────────────────────────────────
+
+
+def rank(cands: list[Candidate], a: dict) -> tuple[list[Candidate], list[str]]:
+    rexp, eexp = GOALS[a["goal"]][1]
+    eligible, skipped = [], []
+    for c in cands:
+        c.finalize(a["stale_days"])
+        if c.size < 100 * MB:
+            continue
+        if c.tag in a["exclude"]:
+            skipped.append(f"{c.title} ({human(c.size)}) — marked off-limits")
+            continue
+        if c.risk > a["risk"]:
+            skipped.append(f"{c.title} ({human(c.size)}) — {RISK[c.risk][0]}, above your limit")
+            continue
+        c.score = (c.size / GB) * (0.5 if c.upper_bound else 1.0) / (c.risk**rexp * c.effort**eexp)
+        eligible.append(c)
+    eligible.sort(key=lambda c: c.score, reverse=True)
+    return eligible, skipped
+
+
+def print_recommendations(ranked: list[Candidate], skipped: list[str], a: dict, top: int) -> None:
+    goal_text = GOALS[a["goal"]][0].split(" —")[0].lower()
+    print(bold(f"\nTop {min(top, len(ranked))} actions") + dim(f" — goal: {goal_text}, risk ≤ {a['risk']}, "
+                                                            f"unused ≥ {a['stale_days']} days"))
+    if not ranked:
+        print("  Nothing worth suggesting within your limits. Try allowing a higher risk level.")
+    cumulative = 0
+    target = a["target_gb"] * GB if a["target_gb"] else None
+    for i, c in enumerate(ranked[:top], 1):
+        before = cumulative
+        cumulative += c.size
+        risk_text, risk_col = RISK[c.risk]
+        size_txt = ("up to " if c.upper_bound else "") + human(c.size)
+        print(f"\n {bold(f'{i}.')} {bold(c.title)}  {cyan(size_txt)}")
+        print(f"    {risk_col('●')} {risk_text} · {EFFORT[c.effort]}")
+        print(dim(f"    {c.why}"))
+        cmds, more = c.actions()
+        per_item = any(size for _, size in cmds)
+        shown = [e for e in c.kept if e.size][:4]
+        if not per_item and len(c.kept) > 1 and shown:  # per-item commands already show what goes
+            print("    Biggest:")
+            for e in shown:
+                print(f"      {human(e.size):>9}  {e.label}")
+        if cmds:
+            print("    Run:")
+            width = min(70, max(len(cmd) for cmd, _ in cmds))
+            for cmd, size in cmds:
+                print(f"      {green(cmd.ljust(width))}{dim(f'  # {human(size)}')}" if size else f"      {green(cmd)}")
+            if more:
+                print(dim(f"      … and {more} smaller one(s) of the same kind"))
+        if c.steps:
+            print(f"    Do:  {c.steps}")
+        if c.note:
+            print(dim(f"    Note: {c.note}"))
+        if target and before < target:
+            reached = green("  ✓ target reached") if cumulative >= target else ""
+            print(dim(f"    Running total: {human(cumulative)} of {human(target)} target ")
+                  + bar(min(1.0, cumulative / target), 16) + reached)
+
+    if target:
+        total5 = sum(c.size for c in ranked[:top])
+        if total5 >= target:
+            n = next(i for i in range(1, top + 1) if sum(c.size for c in ranked[:i]) >= target)
+            print(green(f"\n  ✓ The first {n} action(s) reach your {human(target)} target."))
+        else:
+            print(yellow(f"\n  ! These reach {human(total5)} of your {human(target)} target."), end="")
+            print(" Allow more risk, lower the unused-days threshold, or see below.")
+
+    rest = ranked[top:top + 6]
+    if rest:
+        print(bold("\nAlso worth a look"))
+        for c in rest:
+            print(f"  · {c.title} {dim('— ' + human(c.size) + ', ' + RISK[c.risk][0])}")
+    if skipped:
+        print(bold("\nLeft out by your choices"))
+        for s in skipped[:8]:
+            print(dim(f"  · {s}"))
+    denied = denied_areas()
+    if denied:
+        print(dim(f"\n  Couldn't read: {', '.join(denied[:6])}{' …' if len(denied) > 6 else '.'} "
+                  "Full Disk Access for your terminal gives complete numbers."))
+    if SCAN_ERRORS:
+        print(dim("  Probe errors: " + "; ".join(SCAN_ERRORS)))
+    print(dim("\n  Nothing was deleted. Review each command before running it.\n"))
+
+
+# ─── main ────────────────────────────────────────────────────────────────────
+
+
+class Spinner:
+    def __init__(self, text: str):
+        self.text, self._stop = text, threading.Event()
+        self._t = threading.Thread(target=self._spin, daemon=True)
+
+    def _spin(self):
+        frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+        i = 0
+        while not self._stop.wait(0.1):
+            sys.stderr.write(f"\r{cyan(frames[i % len(frames)])} {self.text}")
+            sys.stderr.flush()
+            i += 1
+        sys.stderr.write("\r\033[K")
+
+    def __enter__(self):
+        if sys.stderr.isatty():
+            self._t.start()
+        return self
+
+    def __exit__(self, *exc):
+        self._stop.set()
+        if self._t.is_alive():
+            self._t.join()
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Show disk usage and suggest the most effective cleanup actions.")
+    p.add_argument("--defaults", action="store_true", help="don't ask; reuse last answers (or built-in defaults)")
+    p.add_argument("--goal", choices=list(GOALS), help="space | safe | effort")
+    p.add_argument("--risk", type=int, choices=[1, 2, 3], help="1 regenerating only, 2 +re-downloadable, 3 +personal files")
+    p.add_argument("--target", type=float, metavar="GB", help="how much space you want to free")
+    p.add_argument("--stale-days", type=int, metavar="N", help="treat things unused for N days as stale")
+    p.add_argument("--exclude", metavar="TAGS", help="comma-separated off-limits areas: " + ",".join(TAGS))
+    p.add_argument("--top", type=int, default=5, help="number of actions to suggest (default 5)")
+    return p.parse_args()
+
+
+def main() -> None:
+    if sys.platform != "darwin":
+        sys.exit("disk-advisor only supports macOS.")
+    args = parse_args()
+    answers = load_answers()
+    fixed: set[str] = set()
+    for key, val in (("goal", args.goal), ("risk", args.risk), ("target_gb", args.target), ("stale_days", args.stale_days)):
+        if val is not None:
+            answers[key] = val
+            fixed.add(key)
+    if args.exclude is not None:
+        bad = [t for t in args.exclude.split(",") if t and t not in TAGS]
+        if bad:
+            sys.exit(f"Unknown --exclude tag(s): {', '.join(bad)}. Choose from: {', '.join(TAGS)}")
+        answers["exclude"] = [t for t in args.exclude.split(",") if t]
+        fixed.add("exclude")
+
+    # Start scanning right away; answer questions while it runs.
+    bg = cf.ThreadPoolExecutor(max_workers=2)
+    f_overview = bg.submit(build_overview)
+    f_cands = bg.submit(collect_all)
+
+    if not args.defaults and sys.stdin.isatty():
+        answers = prompt_answers(answers, fixed)
+        save_answers(answers)
+
+    with Spinner("Scanning disk… (first run can take a minute or two)"):
+        overview = f_overview.result()
+        cands = f_cands.result()
+
+    print_overview(overview)
+    ranked, skipped = rank(cands, answers)
+    print_recommendations(ranked, skipped, answers, args.top)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.stderr.write("\nAborted.\n")
+        os._exit(130)
